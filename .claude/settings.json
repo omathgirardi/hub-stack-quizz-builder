@@ -3,7 +3,8 @@
     "allow": [
       "Bash(npm install:*)",
       "Skill(update-config)",
-      "Skill(update-config:*)"
+      "Skill(update-config:*)",
+      "Bash(node -e \"require\\(''@neondatabase/serverless''\\); require\\(''drizzle-orm''\\); require\\(''@tiptap/react''\\); require\\(''@dnd-kit/core''\\); console.log\\(''all deps ok''\\)\")"
     ],
     "additionalDirectories": [
       "C:\\Users\\girar\\.claude"

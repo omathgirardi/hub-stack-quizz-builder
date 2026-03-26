@@ -4,53 +4,59 @@
       "instrucao": "LEIA ESTA SECAO PRIMEIRO antes de qualquer implementacao. Ela descreve o estado atual do projeto e as regras que nunca podem ser violadas.",
       "estado_atual": {
         "feito": [
-          "Projeto criado com template Cloudflare + Remix",
-          "Clerk instalado e configurado",
-          "Neon DB criado — DATABASE_URL no env"
+          "Projeto criado com Next.js 14 App Router",
+          "Clerk instalado e configurado (@clerk/nextjs)",
+          "Neon DB criado — DATABASE_URL no env",
+          "Paginas /sign-in e /sign-up criadas",
+          "ClerkProvider configurado no layout.tsx"
         ],
         "pendente": [
-          "Schema Drizzle criado em app/lib/db/schema.ts",
-          "npx drizzle-kit push para criar tabelas no Neon",
-          "Todas as paginas e componentes listados neste PRD"
+          "Instalar @cloudflare/next-on-pages e configurar next.config.js",
+          "Instalar @neondatabase/serverless drizzle-orm drizzle-kit",
+          "Criar schema Drizzle em app/lib/db/schema.ts",
+          "Rodar npx drizzle-kit push para criar tabelas no Neon",
+          "Criar middleware.ts do Clerk para proteger rotas",
+          "Implementar todas as paginas e componentes listados no PRD"
         ],
         "instrucao_antes_de_comecar": "Leia os arquivos existentes no projeto para entender o que ja foi feito. Nao duplicar nem sobrescrever o que ja existe."
       },
       "regras_criticas": [
-        "NUNCA usar process.env — sempre context.cloudflare.env.VAR via loader/action do Remix",
-        "NUNCA usar pg ou postgres.js — Workers nao suportam TCP. Usar APENAS @neondatabase/serverless",
+        "Exportar export const runtime = edge em TODA rota que usa banco de dados — obrigatorio para Cloudflare",
+        "Usar @neondatabase/serverless com driver HTTP — pg e postgres.js nao funcionam no Edge runtime",
         "Todas as rotas /api/public/* e /embed/* devem ter header Access-Control-Allow-Origin: *",
         "O embed script deve ser JavaScript vanilla puro — zero dependencias externas",
-        "getDb(env) recebe o env do Cloudflare — nunca instanciar o db fora de um loader/action"
+        "Variaveis de ambiente via process.env normalmente — Cloudflare Pages injeta no build"
       ],
       "padrao_obrigatorio_banco": {
         "arquivo": "app/lib/db/index.ts",
-        "codigo": "import { neon } from @neondatabase/serverless\nimport { drizzle } from drizzle-orm/neon-http\nimport * as schema from ./schema\n\nexport function getDb(env: { DATABASE_URL: string }) {\n  const sql = neon(env.DATABASE_URL)\n  return drizzle(sql, { schema })\n}",
-        "uso_em_loader": "export async function loader({ context }: LoaderFunctionArgs) {\n  const env = context.cloudflare.env\n  const db = getDb(env)\n  // ...\n}"
+        "codigo": "import { neon } from '@neondatabase/serverless'\nimport { drizzle } from 'drizzle-orm/neon-http'\nimport * as schema from './schema'\n\nexport function getDb() {\n  const sql = neon(process.env.DATABASE_URL!)\n  return drizzle(sql, { schema })\n}",
+        "uso_em_route": "import { getDb } from '@/app/lib/db'\nexport const runtime = 'edge'\n\nexport async function GET() {\n  const db = getDb()\n  // ...\n}"
       },
       "padrao_obrigatorio_auth": {
-        "codigo": "import { getAuth } from @clerk/remix/ssr.server\n\nexport async function loader(args: LoaderFunctionArgs) {\n  const { userId } = await getAuth(args)\n  if (!userId) return redirect(/login)\n  // ...\n}"
+        "middleware": "// middleware.ts na raiz\nimport { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'\n\nconst isPublicRoute = createRouteMatcher(['/sign-in(.*)', '/sign-up(.*)', '/api/public/(.*)', '/embed/(.*)'])\n\nexport default clerkMiddleware(async (auth, req) => {\n  if (!isPublicRoute(req)) await auth.protect()\n})\n\nexport const config = { matcher: ['/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)'] }",
+        "uso_em_route": "import { auth } from '@clerk/nextjs/server'\nexport const runtime = 'edge'\n\nexport async function GET() {\n  const { userId } = await auth()\n  if (!userId) return Response.json({ error: 'Unauthorized' }, { status: 401 })\n  // ...\n}"
       },
       "schema_drizzle": {
         "arquivo": "app/lib/db/schema.ts",
         "codigo": "import { pgTable, uuid, text, integer, jsonb, timestamp, index } from drizzle-orm/pg-core\n\nexport const quizzes = pgTable(quizzes, {\n  id: uuid(id).primaryKey().defaultRandom(),\n  userId: text(user_id).notNull(),\n  title: text(title).notNull(),\n  questions: jsonb(questions).notNull().default([]),\n  settings: jsonb(settings).notNull().default({}),\n  status: text(status).notNull().default(active),\n  createdAt: timestamp(created_at).defaultNow(),\n  updatedAt: timestamp(updated_at).defaultNow(),\n}, (t) => ({\n  userIdIdx: index(idx_quizzes_user_id).on(t.userId),\n}))\n\nexport const responses = pgTable(responses, {\n  id: uuid(id).primaryKey().defaultRandom(),\n  quizId: uuid(quiz_id).notNull().references(() => quizzes.id, { onDelete: cascade }),\n  leadName: text(lead_name).default(),\n  leadEmail: text(lead_email).default(),\n  whatsapp: text(whatsapp).default(),\n  score: integer(score).default(0),\n  resultBand: text(result_band).default(),\n  answers: jsonb(answers).default([]),\n  ipAddress: text(ip_address).default(),\n  userAgent: text(user_agent).default(),\n  source: text(source).default(),\n  createdAt: timestamp(created_at).defaultNow(),\n}, (t) => ({\n  quizIdIdx: index(idx_responses_quiz_id).on(t.quizId),\n  resultBandIdx: index(idx_responses_result_band).on(t.resultBand),\n  createdAtIdx: index(idx_responses_created_at).on(t.createdAt),\n}))"
       },
       "mapa_de_rotas": {
-        "_auth.login.tsx": "/login",
-        "_auth.signup.tsx": "/signup",
-        "_dashboard.tsx": "layout protegido sidebar + header",
-        "_dashboard._index.tsx": "/ dashboard KPIs",
-        "_dashboard.quizzes._index.tsx": "/quizzes lista",
-        "_dashboard.quizzes.new.tsx": "/quizzes/new",
-        "_dashboard.quizzes.$id.edit.tsx": "/quizzes/:id/edit",
-        "_dashboard.responses.tsx": "/responses",
-        "api.responses.export.tsx": "/api/responses/export CSV",
-        "api.quizzes.$id.export.tsx": "/api/quizzes/:id/export JSON",
-        "api.quizzes.import.tsx": "/api/quizzes/import",
-        "api.webhooks.clerk.tsx": "/api/webhooks/clerk",
-        "api.public.quiz.$id.tsx": "/api/public/quiz/:id CORS aberto",
-        "api.public.responses.submit.tsx": "/api/public/responses/submit CORS aberto",
-        "api.public.responses.partial.tsx": "/api/public/responses/partial CORS aberto",
-        "embed.$id[.js].tsx": "/embed/:id.js JavaScript vanilla CORS aberto"
+        "app/(auth)/sign-in/[[...sign-in]]/page.tsx": "/sign-in Clerk SignIn",
+        "app/(auth)/sign-up/[[...sign-up]]/page.tsx": "/sign-up Clerk SignUp",
+        "app/(dashboard)/layout.tsx": "layout protegido sidebar + header",
+        "app/(dashboard)/page.tsx": "/ dashboard KPIs",
+        "app/(dashboard)/quizzes/page.tsx": "/quizzes lista",
+        "app/(dashboard)/quizzes/new/page.tsx": "/quizzes/new",
+        "app/(dashboard)/quizzes/[id]/edit/page.tsx": "/quizzes/:id/edit",
+        "app/(dashboard)/responses/page.tsx": "/responses",
+        "app/api/responses/export/route.ts": "/api/responses/export CSV — edge runtime",
+        "app/api/quizzes/[id]/export/route.ts": "/api/quizzes/:id/export JSON — edge runtime",
+        "app/api/quizzes/import/route.ts": "/api/quizzes/import — edge runtime",
+        "app/api/webhooks/clerk/route.ts": "/api/webhooks/clerk",
+        "app/api/public/quiz/[id]/route.ts": "/api/public/quiz/:id CORS aberto — edge runtime",
+        "app/api/public/responses/submit/route.ts": "/api/public/responses/submit CORS aberto — edge runtime",
+        "app/api/public/responses/partial/route.ts": "/api/public/responses/partial CORS aberto — edge runtime",
+        "app/embed/[id]/route.ts": "/embed/:id JavaScript vanilla CORS aberto — edge runtime"
       }
     },
     "project": {
@@ -83,27 +89,27 @@
       ]
     },
     "stack": {
-      "framework": "Remix v2 com Vite",
-      "runtime": "Cloudflare Pages Functions — Workers runtime",
+      "framework": "Next.js 14 — App Router",
+      "runtime": "Cloudflare Pages via @cloudflare/next-on-pages",
       "linguagem": "TypeScript",
       "banco": "Neon.tech — PostgreSQL serverless gratuito",
       "orm": "Drizzle ORM — única ORM com suporte nativo ao Neon HTTP driver sem connection pooling issues no Workers runtime",
-      "neon_driver": "@neondatabase/serverless — driver HTTP do Neon, obrigatório pois Workers não suportam TCP nativo",
-      "auth": "Clerk com @clerk/remix",
+      "neon_driver": "@neondatabase/serverless — driver HTTP obrigatorio para Edge runtime do Cloudflare",
+      "auth": "Clerk com @clerk/nextjs",
       "estilo": "Tailwind CSS",
       "editor_rich_text": "Tiptap",
       "upload_imagens": "Uploadthing",
       "drag_and_drop": "@dnd-kit/core e @dnd-kit/sortable",
-      "deploy": "Cloudflare Pages via Wrangler CLI"
+      "deploy": "Cloudflare Pages — build command: npx @cloudflare/next-on-pages"
     },
     "nota_critica_neon_no_workers": {
       "problema": "Cloudflare Workers não suportam conexões TCP nativas — drivers padrão como pg e postgres.js não funcionam",
       "solucao": "Usar o driver HTTP do Neon: @neondatabase/serverless",
-      "configuracao_drizzle": "import { neon } from '@neondatabase/serverless'; import { drizzle } from 'drizzle-orm/neon-http'; export function getDb(env) { const sql = neon(env.DATABASE_URL); return drizzle(sql); }",
-      "acesso_env": "NUNCA usar process.env — sempre env vem do context.cloudflare.env passado pelo loader/action do Remix"
+      "configuracao_drizzle": "import { neon } from '@neondatabase/serverless'; import { drizzle } from 'drizzle-orm/neon-http'; export function getDb(env?: { DATABASE_URL: string }) { const url = env?.DATABASE_URL ?? process.env.DATABASE_URL!; const sql = neon(url); return drizzle(sql); }",
+      "acesso_env": "No Next.js com Cloudflare Pages usar process.env normalmente — as variaveis sao injetadas no build. Nao precisa de context.cloudflare.env."
     },
     "setup_inicial": {
-      "comando_criar_projeto": "npm create cloudflare@latest hub-stack-quizz-builder -- --template=cloudflare/templates/remix",
+      "comando_criar_projeto": "Projeto ja criado com Next.js. Instalar: npm install @cloudflare/next-on-pages @neondatabase/serverless drizzle-orm drizzle-kit @clerk/nextjs @tiptap/react @tiptap/starter-kit @tiptap/extension-link @dnd-kit/core @dnd-kit/sortable uploadthing @uploadthing/react uuid",
       "dependencias": [
         "@remix-run/cloudflare",
         "@remix-run/react",
@@ -122,10 +128,12 @@
         "@uploadthing/react",
         "uuid"
       ],
-      "wrangler_toml": "name = 'hub-stack-quizz-builder'\ncompatibility_date = '2024-01-01'\ncompatibility_flags = ['nodejs_compat']"
+      "wrangler_toml": "name = 'hub-stack-quizz-builder'\ncompatibility_date = '2024-01-01'\ncompatibility_flags = ['nodejs_compat']\npages_build_output_dir = '.vercel/output/static'",
+      "next_config": "/** @type {import('next').NextConfig} */\nconst { setupDevPlatform } = require('@cloudflare/next-on-pages/next-dev')\nif (process.env.NODE_ENV === 'development') setupDevPlatform()\nmodule.exports = { reactStrictMode: true }",
+      "edge_runtime": "Todas as rotas que usam banco de dados precisam exportar: export const runtime = 'edge' — obrigatorio para rodar no Cloudflare"
     },
     "variaveis_de_ambiente": {
-      "onde_configurar": "Cloudflare Pages Dashboard → Settings → Environment Variables → Production",
+      "onde_configurar": "Cloudflare Pages Dashboard → Settings → Environment Variables → Production. E tambem no .env.local para desenvolvimento local.",
       "variaveis": [
         "DATABASE_URL — Neon.tech connection string",
         "APP_URL — URL pública ex: https://hub-stack-quizz-builder.pages.dev",
@@ -135,7 +143,7 @@
         "UPLOADTHING_SECRET",
         "UPLOADTHING_APP_ID"
       ],
-      "acesso_no_codigo": "context.cloudflare.env.NOME_DA_VAR nos loaders e actions"
+      "acesso_no_codigo": "process.env.NOME_DA_VAR — funciona normalmente no Next.js com Cloudflare Pages"
     },
     "banco_de_dados": {
       "provider": "Neon.tech",
@@ -279,87 +287,90 @@
     "rotas": {
       "autenticadas": [
         {
-          "arquivo": "app/routes/_dashboard.tsx",
-          "descricao": "Layout protegido. Loader usa getAuth() do @clerk/remix — redireciona /login se não autenticado. Renderiza sidebar + header com logout."
+          "arquivo": "app/(dashboard)/layout.tsx",
+          "descricao": "Layout protegido. Clerk middleware redireciona automaticamente para /sign-in se nao autenticado. Renderiza sidebar + header."
         },
         {
-          "arquivo": "app/routes/_dashboard._index.tsx",
+          "arquivo": "app/(dashboard)/page.tsx",
           "rota": "/",
-          "descricao": "Dashboard KPIs. Loader: getDashboardStats(db, userId, dateStart, dateEnd). UI: 4 cards KPI com gauge SVG semicírculo + barras de faixa."
+          "descricao": "Dashboard KPIs. Server Component busca getDashboardStats(db, userId, dateStart, dateEnd). UI: 4 cards KPI com gauge SVG semicirculo + barras de faixa."
         },
         {
-          "arquivo": "app/routes/_dashboard.quizzes._index.tsx",
+          "arquivo": "app/(dashboard)/quizzes/page.tsx",
           "rota": "/quizzes",
-          "descricao": "Lista quizzes. Loader: getQuizzesByUser com count de responses. Action DELETE. UI: grid de cards com modal de embed mostrando o script para copiar."
+          "descricao": "Lista quizzes. Server Component. Acoes de delete via Server Action ou route handler. Modal de embed com codigo script para copiar."
         },
         {
-          "arquivo": "app/routes/_dashboard.quizzes.new.tsx",
+          "arquivo": "app/(dashboard)/quizzes/new/page.tsx",
           "rota": "/quizzes/new",
-          "descricao": "Criar quiz. Renderiza BuilderLayout vazio. Action POST cria quiz e redireciona para edição."
+          "descricao": "Criar quiz. Client Component BuilderLayout com estado vazio. Salva via POST /api/quizzes."
         },
         {
-          "arquivo": "app/routes/_dashboard.quizzes.$id.edit.tsx",
+          "arquivo": "app/(dashboard)/quizzes/[id]/edit/page.tsx",
           "rota": "/quizzes/:id/edit",
-          "descricao": "Editar quiz. Loader busca quiz verificando userId. Action PUT atualiza."
+          "descricao": "Editar quiz. Busca quiz no servidor e passa para BuilderLayout. Salva via PUT /api/quizzes/:id."
         },
         {
-          "arquivo": "app/routes/_dashboard.responses.tsx",
+          "arquivo": "app/(dashboard)/responses/page.tsx",
           "rota": "/responses",
-          "descricao": "Respostas com filtros. Loader: getResponses com quiz_id, result_band, date_from, date_to, page. Action DELETE bulk. UI: tabela paginada com colunas dinâmicas por pergunta."
+          "descricao": "Respostas com filtros via searchParams. Tabela paginada com colunas dinamicas. Botoes exportar CSV e limpar respostas."
         },
         {
-          "arquivo": "app/routes/api.responses.export.tsx",
+          "arquivo": "app/api/quizzes/route.ts",
+          "rota": "/api/quizzes",
+          "descricao": "GET lista quizzes. POST cria quiz. export const runtime = edge"
+        },
+        {
+          "arquivo": "app/api/quizzes/[id]/route.ts",
+          "rota": "/api/quizzes/:id",
+          "descricao": "GET busca quiz. PUT atualiza. DELETE remove. export const runtime = edge"
+        },
+        {
+          "arquivo": "app/api/responses/route.ts",
+          "rota": "/api/responses",
+          "descricao": "GET lista com filtros e paginacao. DELETE bulk. export const runtime = edge"
+        },
+        {
+          "arquivo": "app/api/responses/export/route.ts",
           "rota": "/api/responses/export",
-          "descricao": "Loader retorna Response com CSV. Headers: Content-Type text/csv, Content-Disposition attachment."
+          "descricao": "GET retorna CSV. Headers Content-Disposition attachment. export const runtime = edge"
         },
         {
-          "arquivo": "app/routes/api.quizzes.$id.export.tsx",
+          "arquivo": "app/api/dashboard/route.ts",
+          "rota": "/api/dashboard",
+          "descricao": "GET KPIs do dia. export const runtime = edge"
+        },
+        {
+          "arquivo": "app/api/quizzes/[id]/export/route.ts",
           "rota": "/api/quizzes/:id/export",
-          "descricao": "Exporta quiz como JSON — { v, title, questions, settings }."
+          "descricao": "GET exporta JSON do quiz. export const runtime = edge"
         },
         {
-          "arquivo": "app/routes/api.quizzes.import.tsx",
+          "arquivo": "app/api/quizzes/import/route.ts",
           "rota": "/api/quizzes/import",
-          "descricao": "Action POST importa JSON e cria quiz com título + (Importado)."
+          "descricao": "POST importa JSON. export const runtime = edge"
         }
       ],
       "publicas": [
         {
-          "arquivo": "app/routes/api.public.quiz.$id.tsx",
+          "arquivo": "app/api/public/quiz/[id]/route.ts",
           "rota": "/api/public/quiz/:id",
-          "descricao": "Retorna dados do quiz sem autenticação. Headers CORS: Access-Control-Allow-Origin: *"
+          "descricao": "GET retorna dados do quiz sem autenticacao. CORS: Access-Control-Allow-Origin: *. export const runtime = edge"
         },
         {
-          "arquivo": "app/routes/api.public.responses.submit.tsx",
+          "arquivo": "app/api/public/responses/submit/route.ts",
           "rota": "/api/public/responses/submit",
-          "descricao": "Action POST recebe resposta final. Rate limit 100/hora por IP. CORS aberto. Retorna { response_id, result: band_data }."
+          "descricao": "POST resposta final. Rate limit por IP. CORS aberto. Retorna { response_id, result }. export const runtime = edge"
         },
         {
-          "arquivo": "app/routes/api.public.responses.partial.tsx",
+          "arquivo": "app/api/public/responses/partial/route.ts",
           "rota": "/api/public/responses/partial",
-          "descricao": "Action POST salva resposta parcial em tempo real. CORS aberto. Retorna { response_id }."
+          "descricao": "POST parcial em tempo real. CORS aberto. Retorna { response_id }. export const runtime = edge"
         },
         {
-          "arquivo": "app/routes/embed.$id[.js].tsx",
-          "rota": "/embed/:id.js",
-          "descricao": "Loader serve JavaScript vanilla como application/javascript. Cache-Control: public max-age=300. O script gerado contém o quiz_id hardcoded e faz fetch das APIs públicas para renderizar o quiz completo no site do cliente.",
-          "o_script_gerado_faz": [
-            "Detecta posição via document.currentScript",
-            "Cria div container hbq-QUIZ_ID",
-            "Injeta CSS do quiz no head via style tag",
-            "Fetch /api/public/quiz/QUIZ_ID para buscar questions e settings",
-            "Renderiza HTML das telas: landing, lead capture, perguntas, loading, resultado",
-            "Gerencia navegação entre telas e barra de progresso",
-            "POST /api/public/responses/partial a cada pergunta respondida",
-            "Calcula score e result_band ao final",
-            "POST /api/public/responses/submit",
-            "Renderiza tela de resultado com dados retornados"
-          ]
-        },
-        {
-          "arquivo": "app/routes/api.webhooks.clerk.tsx",
-          "rota": "/api/webhooks/clerk",
-          "descricao": "Action POST sincroniza usuários do Clerk."
+          "arquivo": "app/embed/[id]/route.ts",
+          "rota": "/embed/:id",
+          "descricao": "GET serve JavaScript vanilla como application/javascript. Cache 5min. CORS aberto. export const runtime = edge"
         }
       ],
       "auth": [
