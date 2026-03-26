@@ -5,6 +5,7 @@ import { getQuizzesByUser } from '@/lib/db/queries/quizzes'
 import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
 import { ResponsesClient } from './ResponsesClient'
+import { ResponseRow } from './ResponseRow'
 
 
 interface SearchParams {
@@ -68,24 +69,14 @@ export default async function ResponsesPage({ searchParams }: { searchParams: Pr
                 </td>
               </tr>
             ) : (
-              rows.map(({ response: r, quizTitle }) => (
-                <tr key={r.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 font-medium text-gray-900">{r.leadName || '—'}</td>
-                  <td className="px-4 py-3 text-gray-600">{r.leadEmail || '—'}</td>
-                  <td className="px-4 py-3 text-gray-600">{r.whatsapp || '—'}</td>
-                  <td className="px-4 py-3">
-                    {r.resultBand ? (
-                      <Badge color={bandColor[r.resultBand] ?? 'gray'}>
-                        {r.resultBand.replace(/_/g, ' ')}
-                      </Badge>
-                    ) : '—'}
-                  </td>
-                  <td className="px-4 py-3 text-gray-800">{r.score}</td>
-                  <td className="px-4 py-3 text-gray-600 max-w-[160px] truncate">{quizTitle}</td>
-                  <td className="px-4 py-3 text-gray-500">
-                    {r.createdAt ? new Date(r.createdAt).toLocaleString('pt-BR') : '—'}
-                  </td>
-                </tr>
+              rows.map(({ response: r, quizTitle, quizQuestions }) => (
+                <ResponseRow
+                  key={r.id}
+                  r={r}
+                  quizTitle={quizTitle}
+                  quizQuestions={quizQuestions}
+                  bandColor={bandColor}
+                />
               ))
             )}
           </tbody>

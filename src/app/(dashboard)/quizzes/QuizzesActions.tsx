@@ -32,10 +32,17 @@ export function QuizzesActions({ quiz }: { quiz: Quiz }) {
     setTimeout(() => setCopied(false), 2000)
   }
 
+  function handleExport() {
+    window.open(`/api/quizzes/${quiz.id}/export`, '_blank')
+  }
+
   return (
     <>
       <Button variant="ghost" size="sm" onClick={() => setShowEmbed(true)}>
         {'</>'}  Embed
+      </Button>
+      <Button variant="ghost" size="sm" onClick={handleExport}>
+        📥 Exportar
       </Button>
       <Button variant="ghost" size="sm" onClick={() => setShowDelete(true)}>
         🗑

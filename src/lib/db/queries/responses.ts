@@ -30,7 +30,7 @@ export async function getResponses(filters: {
 
   const [rows, countResult] = await Promise.all([
     db
-      .select({ response: responses, quizTitle: quizzes.title })
+      .select({ response: responses, quizTitle: quizzes.title, quizQuestions: quizzes.questions })
       .from(responses)
       .innerJoin(quizzes, eq(responses.quizId, quizzes.id))
       .where(and(...conditions))

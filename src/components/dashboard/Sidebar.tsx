@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { UserButton } from '@clerk/nextjs'
+import { UserButton, SignOutButton } from '@clerk/nextjs'
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: '📊' },
@@ -35,11 +35,17 @@ export function Sidebar() {
           )
         })}
       </nav>
-      <div className="border-t border-gray-200 p-4">
+      <div className="border-t border-gray-200 p-4 space-y-4">
         <div className="flex items-center gap-3">
           <UserButton />
-          <span className="text-sm text-gray-600">Minha conta</span>
+          <span className="text-sm text-gray-600 font-medium">Minha conta</span>
         </div>
+        <SignOutButton>
+          <button className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50">
+            <span>🚪</span>
+            Sair
+          </button>
+        </SignOutButton>
       </div>
     </aside>
   )

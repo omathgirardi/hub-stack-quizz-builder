@@ -16,7 +16,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
   const script = `
 (function() {
-  var QUIZ_DATA = ${JSON.stringify(quiz).replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\${/g, '\\${')};
+  var QUIZ_DATA = ${JSON.stringify(quiz).replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\${/g, '\\${').replace(/</g, '\\u003c')};
   var QUIZ_ID = "${quiz.id}";
   var API_BASE = '${appUrl}';
 
@@ -67,22 +67,23 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     var checklistHtml = '';
     ['checklist_item_1', 'checklist_item_2', 'checklist_item_3'].forEach(function(key) {
       if (s[key]) {
-        checklistHtml += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;color:#4a5568;font-size:0.95em">' +
-          '<span style="color:#426a35;font-weight:bold">✔</span>' +
-          '<span>' + s[key] + '</span>' +
+        var text = s[key].replace(/^[✔✅\s]+/, ''); // Remove checkmarks from start of string
+        checklistHtml += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;color:#4a5568;font-size:0.95em">' +
+          '<span style="color:#426a35;font-size:1.2em">✅</span>' +
+          '<span style="text-align:left">' + text + '</span>' +
           '</div>';
       }
     });
 
     render(
       '<div style="text-align:center;padding:32px;background:#fff;border-radius:12px;box-shadow:none;border:none">' +
-      (s.landing_image ? '<img src="' + s.landing_image + '" loading="lazy" style="width:100%;max-width:708px;height:320px;object-fit:cover;border-radius:12px;margin:0 auto 24px;display:block" />' : '') +
+      (s.landing_image ? '<img src="' + s.landing_image + '" loading="lazy" style="width:100%;max-width:708px;height:auto;max-height:320px;object-fit:cover;border-radius:12px;margin:0 auto 24px;display:block" />' : '') +
       (s.badge_text ? '<div style="display:inline-block;background:#f1f7ee;color:#426a35;padding:6px 16px;border-radius:20px;font-size:0.85em;font-weight:700;margin-bottom:16px;text-transform:uppercase;letter-spacing:0.5px">' + s.badge_text + '</div>' : '') +
       (s.headline ? '<h2 style="font-size:1.6em;font-weight:700;margin-bottom:12px;color:#1a202c;line-height:1.3">' + s.headline + '</h2>' : '<h2 style="font-size:1.6em;font-weight:700;margin-bottom:12px;color:#1a202c">' + state.quiz.title + '</h2>') +
       (s.subheadline ? '<div style="color:#4a5568;margin-bottom:24px;line-height:1.6;font-size:1.05em">' + s.subheadline + '</div>' : '') +
-      (checklistHtml ? '<div style="text-align:left;max-width:400px;margin:0 auto 24px;background:#f8fafc;padding:16px;border-radius:12px">' + checklistHtml + '</div>' : '') +
-      (s.urgency_text ? '<p style="color:#dc2626;font-size:0.95em;font-weight:600;margin-bottom:20px;background:#fef2f2;padding:10px;border-radius:8px">' + s.urgency_text + '</p>' : '') +
-      '<button id="hbq-start" style="background:#426a35;color:#fff;border:none;padding:18px 48px;border-radius:12px;font-size:1.15em;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(66,106,53,0.3);transition:transform 0.2s;width:100%;max-width:400px">' + (s.cta_button || 'Iniciar Quiz') + '</button>' +
+      (checklistHtml ? '<div style="display:inline-block;text-align:left;max-width:420px;margin:0 auto 24px;padding:0">' + checklistHtml + '</div>' : '') +
+      (s.urgency_text ? '<p style="color:#dc2626;font-size:0.95em;font-weight:600;margin-bottom:24px;background:#fef2f2;padding:12px;border-radius:8px;max-width:500px;margin-left:auto;margin-right:auto">' + s.urgency_text + '</p>' : '') +
+      '<button id="hbq-start" style="background:#426a35;color:#fff;border:none;padding:18px 48px;border-radius:12px;font-size:1.15em;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(66,106,53,0.3);transition:transform 0.2s;width:100%;max-width:400px;display:block;margin:0 auto">' + (s.cta_button || 'Iniciar Quiz') + '</button>' +
       '</div>'
     );
     var startBtn = document.getElementById('hbq-start');
@@ -119,7 +120,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       if (fieldId === 'whatsapp' && s.whatsapp_capture) {
         fields += '<div style="margin-bottom:4px;text-align:left;font-size:0.9em;font-weight:600;color:#4a5568">' + (s.whatsapp_label || 'WhatsApp') + ' *</div>' +
           '<div style="display:flex;gap:8px;margin-bottom:12px">' +
-          '<select id="hbq-ddi" style="width:100px;padding:14px;border:1px solid #e2e8f0;border-radius:10px;font-size:1em;background:#fff;cursor:pointer;appearance:none;background-image:url(&quot;data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.4-12.8z%22%2F%3E%3C%2Fsvg%3E&quot;);background-repeat:no-repeat;background-position:right%2012px%20top%2050%25;background-size:10px%20auto">' +
+          '<select id="hbq-ddi" style="width:100px;padding:14px;border:1px solid #e2e8f0;border-radius:10px;font-size:1em;background:#fff;cursor:pointer;appearance:none;background-image:url(\'data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.4-12.8z%22%2F%3E%3C%2Fsvg%3E\');background-repeat:no-repeat;background-position:right%2012px%20top%2050%25;background-size:10px%20auto">' +
           '<option value="+55">🇧🇷 +55</option>' +
           '<option value="+54">🇦🇷 +54</option>' +
           '<option value="+34">🇪🇸 +34</option>' +
@@ -145,13 +146,29 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     );
 
     var waInput = document.getElementById('hbq-whatsapp');
+    var ddiSelect = document.getElementById('hbq-ddi');
+    
+    function applyMask() {
+      if (!waInput) return;
+      var ddi = ddiSelect ? ddiSelect.value : '+55';
+      var val = waInput.value.replace(/\D/g, '');
+      var masked = val;
+      
+      if (ddi === '+55') {
+        if (val.length > 2) masked = '(' + val.slice(0, 2) + ') ' + val.slice(2);
+        if (val.length > 7) masked = '(' + val.slice(0, 2) + ') ' + val.slice(2, 7) + '-' + val.slice(7, 11);
+      } else if (ddi === '+351') {
+        if (val.length > 3) masked = val.slice(0, 3) + ' ' + val.slice(3);
+        if (val.length > 6) masked = val.slice(0, 3) + ' ' + val.slice(3, 6) + ' ' + val.slice(6, 9);
+      }
+      waInput.value = masked;
+    }
+
     if (waInput) {
-      waInput.oninput = function(e) {
-        var val = e.target.value.replace(/\D/g, '');
-        // Máscara básica (99) 99999-9999 ou similar
-        if (val.length > 11) val = val.slice(0, 11);
-        e.target.value = val;
-      };
+      waInput.oninput = applyMask;
+    }
+    if (ddiSelect) {
+      ddiSelect.onchange = applyMask;
     }
 
     container.querySelectorAll('.hbq-input, #hbq-ddi').forEach(function(inp) {
@@ -187,6 +204,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
         state.leadName = name;
         state.leadEmail = email;
         state.whatsapp = wa;
+        savePartial(); // <--- Adicionado aqui para criar o registro imediatamente após o lead
         state.currentQuestion = 0;
         renderQuestion();
       };
@@ -209,9 +227,9 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
     var optionsHtml = (q.options || []).filter(function(opt) { return opt && opt.label; }).map(function(opt, i) {
       var letter = opt.letter || String.fromCharCode(65 + i);
-      return '<button class="hbq-opt" data-idx="' + i + '" data-points="' + (opt.points || 0) + '" style="display:flex;align-items:center;width:100%;text-align:left;padding:16px 20px;margin-bottom:12px;border:2px solid #e2e8f0;border-radius:12px;background:#fff;cursor:pointer;font-size:1em;transition:all 0.2s;color:#2d3748">' +
-        '<span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:#f7fafc;border-radius:6px;margin-right:12px;font-weight:700;font-size:0.9em;color:#718096;border:1px solid #edf2f7">' + letter + '</span>' +
-        '<span>' + opt.label + '</span>' +
+      return '<button class="hbq-opt" data-idx="' + i + '" data-points="' + (opt.points || 0) + '" style="display:flex;align-items:center;width:100%;text-align:left;padding:16px 20px;margin-bottom:12px;border:2px solid #e2e8f0;border-radius:12px;background:#fff;cursor:pointer;font-size:1em;transition:all 0.2s;color:#2d3748;word-break:break-word;line-height:1.4">' +
+        '<span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:#f7fafc;border-radius:6px;margin-right:12px;font-weight:700;font-size:0.9em;color:#718096;border:1px solid #edf2f7;flex-shrink:0">' + letter + '</span>' +
+        '<span style="flex:1">' + opt.label + '</span>' +
         '</button>';
     }).join('');
 
@@ -270,6 +288,17 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     });
   }
 
+  function getResultBand() {
+    var s = state.quiz.settings || {};
+    var results = s.results || {};
+    var band = 'leve';
+    Object.keys(results).forEach(function(key) {
+      var r = results[key];
+      if (state.score >= r.range_min && state.score <= r.range_max) band = key;
+    });
+    return band;
+  }
+
   function savePartial() {
     fetch(API_BASE + '/api/public/responses/partial', {
       method: 'POST',
@@ -281,24 +310,13 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
         leadEmail: state.leadEmail,
         whatsapp: state.whatsapp,
         score: state.score,
-        resultBand: '',
+        resultBand: getResultBand(),
         answers: state.answers,
         source: window.location.href,
       }),
     }).then(function(r) { return r.json(); }).then(function(d) {
       if (d.response_id) state.responseId = d.response_id;
     }).catch(function() {});
-  }
-
-  function getResultBand() {
-    var s = state.quiz.settings || {};
-    var results = s.results || {};
-    var band = 'leve';
-    Object.keys(results).forEach(function(key) {
-      var r = results[key];
-      if (state.score >= r.range_min && state.score <= r.range_max) band = key;
-    });
-    return band;
   }
 
   function finishQuiz() {
@@ -338,15 +356,45 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       return;
     }
 
-    var symptoms = Array.isArray(result.description) ? result.description : (result.description ? [result.description] : []);
+    var copyBands = {
+      es: {
+        leve: { headline: 'Tu cuerpo presenta señales iniciales de inflamación', description: 'Este es el momento ideal para actuar e prevenir el avance.' },
+        moderada: { headline: 'Tu cuerpo presenta inflamación moderada', description: 'Los síntomas ya afectan tu qualidade de vida.' },
+        moderada_avancada: { headline: 'Tu cuerpo presenta señales de inflamación moderada a avanzada', description: 'Es crucial actuar ahora para evitar daños irreversíveis.' },
+        avancada: { headline: 'Tu cuerpo apresenta señales de inflamación avanzada', description: 'Atención urgente: tu cuerpo necesita un protocolo específico ahora.' }
+      },
+      pt: {
+        leve: { headline: 'Seu corpo apresenta sinais iniciais de inflamação', description: 'Este é o momento ideal para agir e prevenir o avanço.' },
+        moderada: { headline: 'Seu corpo apresenta inflamação moderada', description: 'Os sintomas já afetam sua qualidade de vida.' },
+        moderada_avancada: { headline: 'Seu corpo apresenta sinais de inflamação moderada a avançada', description: 'É crucial agir agora para evitar danos irreversíveis.' },
+        avancada: { headline: 'Seu corpo apresenta sinais de inflamação avançada', description: 'Atenção urgente: seu corpo precisa de um protocolo específico agora.' }
+      }
+    };
+    var copy = (copyBands[lang] || copyBands.es)[band] || copyBands.es.leve;
+
+    var symptomsMap = {
+      es: {
+        leve: ['❌ Tu cuerpo está acumulando inflamación silenciosa', '❌ Edemas esporádicos en piernas y brazos', '❌ Fatiga y pesadez frecuente'],
+        moderada: ['❌ Tu cuerpo está acumulando inflamación', '❌ Esto aumenta el edema y la sensación de pesadez', '❌ La grasa no responde a la dieta común'],
+        moderada_avancada: ['❌ Tu cuerpo está acumulando inflamación', '❌ La grasa no responde a la dieta común', '❌ Los síntomas tienden a empeorar con el tiempo'],
+        avancada: ['❌ Inflamación sistémica avanzada', '❌ Dificultad para caminar y moverse', '❌ Dolores intensos al tacto', '❌ Los síntomas empeoran sin tratamiento específico']
+      },
+      pt: {
+        leve: ['❌ Seu corpo está acumulando inflamação silenciosa', '❌ Edemas esporádicos nas pernas e braços', '❌ Fadiga e sensação de peso frequente'],
+        moderada: ['❌ Seu corpo está acumulando inflamação', '❌ Isso aumenta o inchaço e a sensação de peso', '❌ A gordura não responde à dieta comum'],
+        moderada_avancada: ['❌ Seu corpo está acumulando inflamação', '❌ A gordura não responde à dieta comum', '❌ Os sintomas tendem a piorar com o tempo'],
+        avancada: ['❌ Inflamação sistêmica avançada', '❌ Dificuldade de locomoção', '❌ Dores intensas ao toque', '❌ Os sintomas pioram sem tratamento específico']
+      }
+    };
+    var symptoms = (symptomsMap[lang] || symptomsMap.es)[band] || symptomsMap.es.moderada;
 
     var scorePercent = Math.min(95, Math.max(10, (state.score / 20) * 100));
     var compItems = [
-      { today: rp.comp_item_1_today, after: rp.comp_item_1_after, todayVal: Math.min(scorePercent+10,90) },
-      { today: rp.comp_item_2_today, after: rp.comp_item_2_after, todayVal: Math.min(scorePercent+20,95) },
-      { today: rp.comp_item_3_today, after: rp.comp_item_3_after, todayVal: Math.min(scorePercent+5,85) },
-      { today: rp.comp_item_4_today, after: rp.comp_item_4_after, todayVal: Math.min(scorePercent+15,80) }
-    ].filter(function(item) { return item.today || item.after; });
+      { today: rp.comp_item_1_today || (lang==='pt'?'Dores constantes':'Dolores constantes'), after: rp.comp_item_1_after || (lang==='pt'?'Alívio total da dor':'Alivio total del dolor'), todayVal: Math.min(scorePercent+10,90) },
+      { today: rp.comp_item_2_today || (lang==='pt'?'Inchaço e peso':'Hinchazón y pesadez'), after: rp.comp_item_2_after || (lang==='pt'?'Pernas leves':'Piernas ligeras'), todayVal: Math.min(scorePercent+20,95) },
+      { today: rp.comp_item_3_today || (lang==='pt'?'Celulite aparente':'Celulitis aparente'), after: rp.comp_item_3_after || (lang==='pt'?'Pele mais lisa':'Piel más lisa'), todayVal: Math.min(scorePercent+5,85) },
+      { today: rp.comp_item_4_today || (lang==='pt'?'Falta de energia':'Falta de energía'), after: rp.comp_item_4_after || (lang==='pt'?'Mais disposição':'Más disposición'), todayVal: Math.min(scorePercent+15,80) }
+    ];
 
     var ctaUrl = result.offer_url || s.cta_offer_url || '#';
     var html = '<div style="font-family:system-ui,sans-serif;max-width:708px;margin:0 auto;background:#fff;border-radius:12px;padding:24px;box-shadow:none;border:none">';
@@ -361,11 +409,18 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     sectionsOrder.forEach(function(sectionId) {
       switch(sectionId) {
         case 'badge':
-          if (result.label || rp.result_badge_label) {
-            html += '<div style="background:#fff8f0;border:1px solid #fde68a;border-left:4px solid #f97316;border-radius:12px;padding:16px 18px;margin-bottom:20px">';
-            if (rp.result_badge_label) html += '<p style="font-size:12px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 6px">' + rp.result_badge_label + '</p>';
-            if (result.label || band) html += '<div style="display:inline-block;background:' + bandColor + ';color:' + badgeTextColor + ';padding:10px 28px;border-radius:30px;font-size:16px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:8px">' + (result.label || band) + '</div>';
-            html += '</div>';
+          if (result.label || rp.result_badge_label || band) {
+            var headlineText = (copy.headline || 'Seu corpo apresenta sinais de inflamação');
+            var emoji = band === 'avancada' ? '🔴' : (band === 'moderada_avancada' ? '🔴' : (band === 'moderada' ? '🟠' : '🟡'));
+            
+            html += '<div style="text-align:center;margin-bottom:24px">';
+            if (result.label || band) {
+              html += '<div style="display:inline-block;background:' + bandColor + ';color:' + badgeTextColor + ';padding:10px 28px;border-radius:30px;font-size:16px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:16px;box-shadow:0 4px 10px rgba(0,0,0,0.1)">' + (result.label || band) + '</div>';
+            }
+            html += '<div style="background:#fff8f0;border:1px solid #fde68a;border-left:4px solid #f97316;border-radius:12px;padding:16px 18px;text-align:left">';
+            html += '<p style="font-size:12px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 8px">⚠️ ' + (lang === 'pt' ? 'SEU RESULTADO baseado nas suas respostas:' : 'TU RESULTADO basado en tus respuestas:') + '</p>';
+            html += '<p style="font-size:18px;font-weight:700;color:#1e293b;margin:0;line-height:1.4">' + headlineText + ' ' + emoji + '</p>';
+            html += '</div></div>';
           }
           break;
         case 'journey':
@@ -508,18 +563,20 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     var s = state.quiz.settings || {};
     state.totalQuestions = (state.quiz.questions || []).length;
     
-    // show_landing deve ser explicitamente checado
-    var showLanding = s.show_landing === true;
-    var hasLeadCapture = !!(s.name_capture || s.email_capture || s.whatsapp_capture);
-    
-    if (showLanding) {
-      renderLanding();
-    } else if (hasLeadCapture) {
-      renderLead();
-    } else {
-      state.currentQuestion = 0;
-      renderQuestion();
-    }
+    // Pequeno atraso para garantir que o container esteja pronto
+    setTimeout(function() {
+      var showLanding = s.show_landing === true;
+      var hasLeadCapture = !!(s.name_capture || s.email_capture || s.whatsapp_capture);
+      
+      if (showLanding) {
+        renderLanding();
+      } else if (hasLeadCapture) {
+        renderLead();
+      } else {
+        state.currentQuestion = 0;
+        renderQuestion();
+      }
+    }, 100);
   }
 
   init();
