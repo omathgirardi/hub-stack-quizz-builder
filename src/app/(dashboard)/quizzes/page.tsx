@@ -9,7 +9,7 @@ import { QuizzesActions } from './QuizzesActions'
 
 export const runtime = 'edge'
 
-export async function QuizzesPage() {
+export default async function QuizzesPage() {
   const { userId } = await auth()
   if (!userId) redirect('/sign-in')
 
