@@ -7,6 +7,7 @@ const navItems = [
   { href: '/', label: 'Dashboard', icon: '📊' },
   { href: '/quizzes', label: 'Quizzes', icon: '📋' },
   { href: '/responses', label: 'Respostas', icon: '📬' },
+  { href: '/gallery', label: 'Galeria', icon: '🖼️' },
 ]
 
 export function Sidebar() {

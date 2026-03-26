@@ -142,14 +142,20 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       btn.onmouseover = function() { 
         this.style.borderColor = '#426a35'; 
         this.style.background = '#f1f7ee';
-        this.querySelector('span').style.background = '#426a35';
-        this.querySelector('span').style.color = '#fff';
+        var badge = this.querySelector('span');
+        if (badge) {
+          badge.style.background = '#426a35';
+          badge.style.color = '#fff';
+        }
       };
       btn.onmouseout = function() { 
         this.style.borderColor = '#e2e8f0'; 
         this.style.background = '#fff';
-        this.querySelector('span').style.background = '#f7fafc';
-        this.querySelector('span').style.color = '#718096';
+        var badge = this.querySelector('span');
+        if (badge) {
+          badge.style.background = '#f7fafc';
+          badge.style.color = '#718096';
+        }
       };
       btn.onclick = function() {
         var points = parseInt(this.getAttribute('data-points') || '0', 10);
