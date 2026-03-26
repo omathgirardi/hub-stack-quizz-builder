@@ -12,7 +12,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     })
   }
 
-  const appUrl = process.env.APP_URL ?? ''
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.APP_URL ?? ''
 
   const script = `
 (function() {
