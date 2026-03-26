@@ -26,10 +26,9 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   container.style.fontFamily = 'system-ui, sans-serif';
   container.style.maxWidth = '708px';
   container.style.margin = '0 auto';
-  container.style.backgroundColor = '#fff';
-  container.style.borderRadius = '12px';
-  container.style.overflow = 'hidden';
-  container.style.boxShadow = '0 4px 20px rgba(0,0,0,0.08)';
+  container.style.backgroundColor = 'transparent';
+  container.style.boxShadow = 'none';
+  container.style.border = 'none';
   if (currentScript && currentScript.parentNode) {
     currentScript.parentNode.insertBefore(container, currentScript);
   } else {
@@ -66,7 +65,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   function renderLanding() {
     var s = state.quiz.settings || {};
     render(
-      '<div style="text-align:center;padding:24px">' +
+      '<div style="text-align:center;padding:24px;background:#fff;border-radius:12px;box-shadow:none;border:none">' +
       (s.landing_image ? '<img src="' + s.landing_image + '" style="width:100%;max-width:708px;height:320px;object-fit:cover;border-radius:12px;margin:0 auto 20px;display:block" />' : '') +
       '<h2 style="font-size:1.6em;font-weight:700;margin-bottom:12px;color:#1a202c">' + (s.headline || state.quiz.title) + '</h2>' +
       '<div style="color:#4a5568;margin-bottom:24px;line-height:1.6">' + (s.subheadline || '') + '</div>' +
@@ -99,7 +98,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     if (s.whatsapp_capture) fields += '<div style="margin-bottom:4px;text-align:left;font-size:0.9em;font-weight:600;color:#4a5568">' + (s.whatsapp_label || 'WhatsApp') + '</div><input id="hbq-whatsapp" class="hbq-input" type="tel" placeholder="' + (s.whatsapp_placeholder || '+54...') + '" style="' + inputStyle + '" />';
 
     render(
-      '<div style="padding:32px;text-align:center">' +
+      '<div style="padding:32px;text-align:center;background:#fff;border-radius:12px;box-shadow:none;border:none">' +
       '<h3 style="margin-bottom:24px;font-size:1.4em;font-weight:700;color:#1a202c">' + (s.lead_headline || 'Antes de começar...') + '</h3>' +
       fields +
       '<button id="hbq-lead-next" style="background:#426a35;color:#fff;border:none;padding:16px;border-radius:12px;font-size:1.1em;font-weight:700;cursor:pointer;width:100%;margin-top:8px;box-shadow:0 4px 12px rgba(66,106,53,0.3)">Continuar</button>' +
@@ -148,13 +147,13 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     }
 
     // Progress bar no topo, fora do container de conteúdo principal
-    var progressBarHtml = '<div style="width:100%;background:#f1f5f9;height:8px;position:relative;overflow:hidden;border-radius:0 0 8px 8px">' +
-      '<div style="position:absolute;top:0;left:0;height:100%;background:#426a35;width:' + progress + '%;transition:width 0.4s cubic-bezier(0.4, 0, 0.2, 1)"></div>' +
+    var progressBarHtml = '<div style="width:100%;background:#f1f5f9;height:8px;position:fixed;top:0;left:0;z-index:9999;overflow:hidden;border-radius:0">' +
+      '<div style="height:100%;background:#426a35;width:' + progress + '%;transition:width 0.4s cubic-bezier(0.4, 0, 0.2, 1)"></div>' +
       '</div>';
 
     render(
       progressBarHtml +
-      '<div style="padding:32px">' +
+      '<div style="padding:32px;background:#fff;border-radius:12px;margin-top:24px;box-shadow:none;border:none">' +
       '<p style="font-size:0.85em;font-weight:700;color:#a0aec0;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">' + (state.currentQuestion + 1) + ' de ' + state.totalQuestions + '</p>' +
       (q.icon ? '<span style="font-size:2.5em;display:block;margin-bottom:12px">' + q.icon + '</span>' : '') +
       (q.media_position === 'top' ? mediaHtml : '') +
@@ -303,7 +302,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     ];
 
     var ctaUrl = result.offer_url || s.cta_offer_url || '#';
-    var html = '<div style="font-family:system-ui,sans-serif;max-width:708px;margin:0 auto">';
+    var html = '<div style="font-family:system-ui,sans-serif;max-width:708px;margin:0 auto;background:#fff;border-radius:12px;padding:24px;box-shadow:none;border:none">';
 
     // 1. Imagem da faixa (vem do Step3 Bands — result.image_url)
     if (result.image_url) {
@@ -437,10 +436,11 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   function init() {
     renderLoading();
     state.quiz = QUIZ_DATA;
+    var s = state.quiz.settings || {};
     state.totalQuestions = (state.quiz.questions || []).length;
-    if (state.quiz.settings.show_landing) {
+    if (s.show_landing) {
       renderLanding();
-    } else if (state.quiz.settings.name_capture || state.quiz.settings.email_capture || state.quiz.settings.whatsapp_capture) {
+    } else if (s.name_capture || s.email_capture || s.whatsapp_capture) {
       renderLead();
     } else {
       state.currentQuestion = 0;
