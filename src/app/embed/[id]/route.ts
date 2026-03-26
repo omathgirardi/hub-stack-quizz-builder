@@ -16,17 +16,22 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
   const script = `
 (function() {
-  var QUIZ_ID = '${quiz.id}';
+  var QUIZ_DATA = ${JSON.stringify(quiz)};
+  var QUIZ_ID = "${quiz.id}";
   var API_BASE = '${appUrl}';
 
   var currentScript = document.currentScript;
   var container = document.createElement('div');
   container.id = 'hbq-' + QUIZ_ID;
   container.style.fontFamily = 'system-ui, sans-serif';
-  container.style.maxWidth = '600px';
+  container.style.maxWidth = '708px';
   container.style.margin = '0 auto';
+  container.style.backgroundColor = '#fff';
+  container.style.borderRadius = '12px';
+  container.style.overflow = 'hidden';
+  container.style.boxShadow = '0 4px 20px rgba(0,0,0,0.08)';
   if (currentScript && currentScript.parentNode) {
-    currentScript.parentNode.insertBefore(container, currentScript.nextSibling);
+    currentScript.parentNode.insertBefore(container, currentScript);
   } else {
     document.body.appendChild(container);
   }
@@ -45,6 +50,13 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
   function render(content) {
     container.innerHTML = content;
+    container.style.display = 'block';
+    container.style.visibility = 'visible';
+    container.style.opacity = '1';
+    // Garante que o container respeite a largura máxima de 708px
+    container.style.maxWidth = '708px';
+    container.style.width = '100%';
+    container.style.boxSizing = 'border-box';
   }
 
   function renderLoading() {
@@ -55,7 +67,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     var s = state.quiz.settings || {};
     render(
       '<div style="text-align:center;padding:24px">' +
-      (s.landing_image ? '<img src="' + s.landing_image + '" style="width:100%;max-width:500px;border-radius:12px;margin:0 auto 20px;display:block" />' : '') +
+      (s.landing_image ? '<img src="' + s.landing_image + '" style="width:100%;max-width:708px;height:320px;object-fit:cover;border-radius:12px;margin:0 auto 20px;display:block" />' : '') +
       '<h2 style="font-size:1.6em;font-weight:700;margin-bottom:12px;color:#1a202c">' + (s.headline || state.quiz.title) + '</h2>' +
       '<div style="color:#4a5568;margin-bottom:24px;line-height:1.6">' + (s.subheadline || '') + '</div>' +
       (s.urgency_text ? '<p style="color:#dc2626;font-size:0.95em;font-weight:600;margin-bottom:20px;background:#fef2f2;padding:10px;border-radius:8px">' + s.urgency_text + '</p>' : '') +
@@ -107,7 +119,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
     var mediaHtml = '';
     if (q.image_url && q.media_position === 'top') {
-      mediaHtml = '<img src="' + q.image_url + '" style="width:100%;border-radius:12px;margin-bottom:20px;display:block" />';
+      mediaHtml = '<img src="' + q.image_url + '" style="width:100%;max-width:708px;height:320px;object-fit:cover;border-radius:12px;margin-bottom:20px;display:block" />';
     }
 
     var optionsHtml = (q.options || []).map(function(opt, i) {
@@ -118,7 +130,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     }).join('');
 
     if (q.image_url && q.media_position === 'bottom') {
-      mediaHtml = '<img src="' + q.image_url + '" style="width:100%;border-radius:12px;margin-top:20px;display:block" />';
+      mediaHtml = '<img src="' + q.image_url + '" style="width:100%;max-width:708px;height:320px;object-fit:cover;border-radius:12px;margin-top:20px;display:block" />';
     }
 
     // Progress bar no topo, fora do container de conteúdo principal
@@ -281,7 +293,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
     // 1. Imagem da faixa (vem do Step3 Bands — result.image_url)
     if (result.image_url) {
-      html += '<img src="' + result.image_url + '" loading="lazy" style="width:100%;max-width:708px;height:320px;object-fit:cover;border-radius:32px;display:block;margin:0 auto 24px;box-shadow:0 10px 25px rgba(0,0,0,0.1)" />';
+      html += '<img src="' + result.image_url + '" loading="lazy" style="width:100%;max-width:708px;height:320px;object-fit:cover;border-radius:12px;display:block;margin:0 auto 24px;box-shadow:0 10px 25px rgba(0,0,0,0.1)" />';
     }
 
     // 2. Badge de resultado
@@ -408,17 +420,21 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     render(html);
   }
 
-  renderLoading();
-  fetch(API_BASE + '/api/public/quiz/' + QUIZ_ID)
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      state.quiz = data;
-      state.totalQuestions = (data.questions || []).filter(function(q) { return !q.is_informational; }).length || (data.questions || []).length;
+  function init() {
+    renderLoading();
+    state.quiz = QUIZ_DATA;
+    state.totalQuestions = (state.quiz.questions || []).length;
+    if (state.quiz.settings.show_landing) {
       renderLanding();
-    })
-    .catch(function() {
-      render('<div style="text-align:center;padding:40px;color:#e53e3e">Erro ao carregar quiz.</div>');
-    });
+    } else if (state.quiz.settings.name_capture || state.quiz.settings.email_capture || state.quiz.settings.whatsapp_capture) {
+      renderLead();
+    } else {
+      state.currentQuestion = 0;
+      renderQuestion();
+    }
+  }
+
+  init();
 })();
 `.trim()
 

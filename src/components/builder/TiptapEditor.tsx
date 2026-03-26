@@ -13,7 +13,7 @@ interface TiptapEditorProps {
 export function TiptapEditor({ value, onChange, placeholder }: TiptapEditorProps) {
   const editor = useEditor({
     immediatelyRender: false,
-    extensions: [StarterKit, Link.configure({ openOnClick: false })],
+    extensions: [StarterKit],
     content: value,
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
     editorProps: {
