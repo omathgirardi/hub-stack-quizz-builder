@@ -64,13 +64,25 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
   function renderLanding() {
     var s = state.quiz.settings || {};
+    var checklistHtml = '';
+    ['checklist_item_1', 'checklist_item_2', 'checklist_item_3'].forEach(function(key) {
+      if (s[key]) {
+        checklistHtml += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;color:#4a5568;font-size:0.95em">' +
+          '<span style="color:#426a35;font-weight:bold">✔</span>' +
+          '<span>' + s[key] + '</span>' +
+          '</div>';
+      }
+    });
+
     render(
-      '<div style="text-align:center;padding:24px;background:#fff;border-radius:12px;box-shadow:none;border:none">' +
-      (s.landing_image ? '<img src="' + s.landing_image + '" style="width:100%;max-width:708px;height:auto;max-height:400px;object-fit:cover;border-radius:12px;margin:0 auto 20px;display:block" />' : '') +
-      (s.headline ? '<div style="font-size:1.6em;font-weight:700;margin-bottom:12px;color:#1a202c">' + s.headline + '</div>' : '<h2 style="font-size:1.6em;font-weight:700;margin-bottom:12px;color:#1a202c">' + state.quiz.title + '</h2>') +
-      (s.subheadline ? '<div style="color:#4a5568;margin-bottom:24px;line-height:1.6">' + s.subheadline + '</div>' : '') +
+      '<div style="text-align:center;padding:32px;background:#fff;border-radius:12px;box-shadow:none;border:none">' +
+      (s.landing_image ? '<img src="' + s.landing_image + '" loading="lazy" style="width:100%;max-width:708px;height:320px;object-fit:cover;border-radius:12px;margin:0 auto 24px;display:block" />' : '') +
+      (s.badge_text ? '<div style="display:inline-block;background:#f1f7ee;color:#426a35;padding:6px 16px;border-radius:20px;font-size:0.85em;font-weight:700;margin-bottom:16px;text-transform:uppercase;letter-spacing:0.5px">' + s.badge_text + '</div>' : '') +
+      (s.headline ? '<h2 style="font-size:1.6em;font-weight:700;margin-bottom:12px;color:#1a202c;line-height:1.3">' + s.headline + '</h2>' : '<h2 style="font-size:1.6em;font-weight:700;margin-bottom:12px;color:#1a202c">' + state.quiz.title + '</h2>') +
+      (s.subheadline ? '<div style="color:#4a5568;margin-bottom:24px;line-height:1.6;font-size:1.05em">' + s.subheadline + '</div>' : '') +
+      (checklistHtml ? '<div style="text-align:left;max-width:400px;margin:0 auto 24px;background:#f8fafc;padding:16px;border-radius:12px">' + checklistHtml + '</div>' : '') +
       (s.urgency_text ? '<p style="color:#dc2626;font-size:0.95em;font-weight:600;margin-bottom:20px;background:#fef2f2;padding:10px;border-radius:8px">' + s.urgency_text + '</p>' : '') +
-      '<button id="hbq-start" style="background:#426a35;color:#fff;border:none;padding:16px 48px;border-radius:12px;font-size:1.1em;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(66,106,53,0.3);transition:transform 0.2s">' + (s.cta_button || 'Iniciar Quiz') + '</button>' +
+      '<button id="hbq-start" style="background:#426a35;color:#fff;border:none;padding:18px 48px;border-radius:12px;font-size:1.15em;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(66,106,53,0.3);transition:transform 0.2s;width:100%;max-width:400px">' + (s.cta_button || 'Iniciar Quiz') + '</button>' +
       '</div>'
     );
     var startBtn = document.getElementById('hbq-start');
@@ -93,9 +105,35 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     var fields = '';
     var inputStyle = 'width:100%;padding:14px;margin-bottom:12px;border:1px solid #e2e8f0;border-radius:10px;box-sizing:border-box;font-size:1em;outline:none;transition:border-color 0.2s';
     
-    if (s.name_capture) fields += '<div style="margin-bottom:4px;text-align:left;font-size:0.9em;font-weight:600;color:#4a5568">' + (s.name_label || 'Nombre') + ' *</div><input id="hbq-name" class="hbq-input" type="text" required placeholder="' + (s.name_placeholder || 'Tu nombre') + '" style="' + inputStyle + '" />';
-    if (s.email_capture) fields += '<div style="margin-bottom:4px;text-align:left;font-size:0.9em;font-weight:600;color:#4a5568">' + (s.email_label || 'E-mail') + ' *</div><input id="hbq-email" class="hbq-input" type="email" required placeholder="' + (s.email_placeholder || 'tu@email.com') + '" style="' + inputStyle + '" />';
-    if (s.whatsapp_capture) fields += '<div style="margin-bottom:4px;text-align:left;font-size:0.9em;font-weight:600;color:#4a5568">' + (s.whatsapp_label || 'WhatsApp') + ' *</div><input id="hbq-whatsapp" class="hbq-input hbq-tel" type="tel" required placeholder="' + (s.whatsapp_placeholder || '(99) 99999-9999') + '" style="' + inputStyle + '" />';
+    var fieldsOrder = s.lead_fields_order || ['whatsapp', 'name', 'email'];
+
+    fieldsOrder.forEach(function(fieldId) {
+      if (fieldId === 'name' && s.name_capture) {
+        fields += '<div style="margin-bottom:4px;text-align:left;font-size:0.9em;font-weight:600;color:#4a5568">' + (s.name_label || 'Nome') + ' *</div>' +
+          '<input id="hbq-name" name="name" autocomplete="name" class="hbq-input" type="text" required placeholder="' + (s.name_placeholder || 'Seu nome') + '" style="' + inputStyle + '" />';
+      }
+      if (fieldId === 'email' && s.email_capture) {
+        fields += '<div style="margin-bottom:4px;text-align:left;font-size:0.9em;font-weight:600;color:#4a5568">' + (s.email_label || 'E-mail') + ' *</div>' +
+          '<input id="hbq-email" name="email" autocomplete="email" class="hbq-input" type="email" required placeholder="' + (s.email_placeholder || 'seu@email.com') + '" style="' + inputStyle + '" />';
+      }
+      if (fieldId === 'whatsapp' && s.whatsapp_capture) {
+        fields += '<div style="margin-bottom:4px;text-align:left;font-size:0.9em;font-weight:600;color:#4a5568">' + (s.whatsapp_label || 'WhatsApp') + ' *</div>' +
+          '<div style="display:flex;gap:8px;margin-bottom:12px">' +
+          '<select id="hbq-ddi" style="width:100px;padding:14px;border:1px solid #e2e8f0;border-radius:10px;font-size:1em;background:#fff;cursor:pointer;appearance:none;background-image:url(\'data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.4-12.8z%22%2F%3E%3C%2Fsvg%3E\');background-repeat:no-repeat;background-position:right%2012px%20top%2050%25;background-size:10px%20auto">' +
+          '<option value="+55">🇧🇷 +55</option>' +
+          '<option value="+54">🇦🇷 +54</option>' +
+          '<option value="+34">🇪🇸 +34</option>' +
+          '<option value="+1">🇺🇸 +1</option>' +
+          '<option value="+351">🇵🇹 +351</option>' +
+          '<option value="+52">🇲🇽 +52</option>' +
+          '<option value="+57">🇨🇴 +57</option>' +
+          '<option value="+56">🇨🇱 +56</option>' +
+          '<option value="+51">🇵🇪 +51</option>' +
+          '</select>' +
+          '<input id="hbq-whatsapp" class="hbq-input hbq-tel" type="tel" required placeholder="' + (s.whatsapp_placeholder || '99 99999-9999') + '" style="flex:1;' + inputStyle.replace('margin-bottom:12px;', '') + '" />' +
+          '</div>';
+      }
+    });
 
     render(
       '<div style="padding:32px;text-align:center;background:#fff;border-radius:12px;box-shadow:none;border:none">' +
@@ -106,15 +144,19 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       '</div>'
     );
 
-    container.querySelectorAll('.hbq-input').forEach(function(inp) {
+    var waInput = document.getElementById('hbq-whatsapp');
+    if (waInput) {
+      waInput.oninput = function(e) {
+        var val = e.target.value.replace(/\D/g, '');
+        // Máscara básica (99) 99999-9999 ou similar
+        if (val.length > 11) val = val.slice(0, 11);
+        e.target.value = val;
+      };
+    }
+
+    container.querySelectorAll('.hbq-input, #hbq-ddi').forEach(function(inp) {
       inp.onfocus = function() { this.style.borderColor = '#426a35'; };
       inp.onblur = function() { this.style.borderColor = '#e2e8f0'; };
-      if (inp.classList.contains('hbq-tel')) {
-        inp.oninput = function(e) {
-          var x = e.target.value.replace(/\D/g, '').match(/(\d{0,2})(\d{0,5})(\d{0,4})/);
-          e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
-        };
-      }
     });
 
     var nextBtn = document.getElementById('hbq-lead-next');
@@ -123,13 +165,14 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
         var nameEl = document.getElementById('hbq-name');
         var emailEl = document.getElementById('hbq-email');
         var waEl = document.getElementById('hbq-whatsapp');
+        var ddiEl = document.getElementById('hbq-ddi');
         var errorEl = document.getElementById('hbq-lead-error');
         
         var name = nameEl ? nameEl.value : '';
         var email = emailEl ? emailEl.value : '';
-        var wa = waEl ? waEl.value : '';
+        var wa = waEl ? (ddiEl ? ddiEl.value : '') + waEl.value : '';
 
-        if ((nameEl && !name) || (emailEl && !email) || (waEl && !wa)) {
+        if ((nameEl && !name) || (emailEl && !email) || (waEl && !waEl.value)) {
           errorEl.textContent = 'Por favor, preencha todos os campos obrigatórios.';
           errorEl.style.display = 'block';
           return;
@@ -151,24 +194,33 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   }
 
   function renderQuestion() {
+    if (!state.quiz || !state.quiz.questions) {
+      render('<div style="text-align:center;padding:40px;color:#ef4444">Erro: Quiz sem perguntas configuradas.</div>');
+      return;
+    }
     var q = state.quiz.questions[state.currentQuestion];
     if (!q) { finishQuiz(); return; }
     var progress = Math.round((state.currentQuestion / state.totalQuestions) * 100);
 
     var mediaHtml = '';
     if (q.image_url && q.media_position === 'top') {
-      mediaHtml = '<img src="' + q.image_url + '" style="width:100%;max-width:708px;height:auto;max-height:400px;object-fit:cover;border-radius:12px;margin-bottom:20px;display:block" />';
+      mediaHtml = '<img src="' + q.image_url + '" style="width:100%;max-width:708px;height:320px;object-fit:cover;border-radius:12px;margin-bottom:20px;display:block" />';
     }
 
-    var optionsHtml = (q.options || []).map(function(opt, i) {
-      return '<button class="hbq-opt" data-idx="' + i + '" data-points="' + opt.points + '" style="display:flex;align-items:center;width:100%;text-align:left;padding:16px 20px;margin-bottom:12px;border:2px solid #e2e8f0;border-radius:12px;background:#fff;cursor:pointer;font-size:1em;transition:all 0.2s;color:#2d3748">' +
-        '<span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:#f7fafc;border-radius:6px;margin-right:12px;font-weight:700;font-size:0.9em;color:#718096;border:1px solid #edf2f7">' + opt.letter + '</span>' +
+    var optionsHtml = (q.options || []).filter(function(opt) { return opt && opt.label; }).map(function(opt, i) {
+      var letter = opt.letter || String.fromCharCode(65 + i);
+      return '<button class="hbq-opt" data-idx="' + i + '" data-points="' + (opt.points || 0) + '" style="display:flex;align-items:center;width:100%;text-align:left;padding:16px 20px;margin-bottom:12px;border:2px solid #e2e8f0;border-radius:12px;background:#fff;cursor:pointer;font-size:1em;transition:all 0.2s;color:#2d3748">' +
+        '<span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:#f7fafc;border-radius:6px;margin-right:12px;font-weight:700;font-size:0.9em;color:#718096;border:1px solid #edf2f7">' + letter + '</span>' +
         '<span>' + opt.label + '</span>' +
         '</button>';
     }).join('');
 
+    if (!optionsHtml && !q.is_informational) {
+      optionsHtml = '<p style="color:#ef4444;text-align:center">Nenhuma opção configurada para esta pergunta.</p>';
+    }
+
     if (q.image_url && q.media_position === 'bottom') {
-      mediaHtml = '<img src="' + q.image_url + '" style="width:100%;max-width:708px;height:auto;max-height:400px;object-fit:cover;border-radius:12px;margin-top:20px;display:block" />';
+      mediaHtml = '<img src="' + q.image_url + '" style="width:100%;max-width:708px;height:320px;object-fit:cover;border-radius:12px;margin-top:20px;display:block" />';
     }
 
     // Progress bar no topo, fora do container de conteúdo principal
@@ -299,150 +351,156 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     var ctaUrl = result.offer_url || s.cta_offer_url || '#';
     var html = '<div style="font-family:system-ui,sans-serif;max-width:708px;margin:0 auto;background:#fff;border-radius:12px;padding:24px;box-shadow:none;border:none">';
 
-    // 1. Imagem da faixa
+    // 1. Imagem da faixa (fixa no topo por enquanto, ou podemos mover depois)
     if (result.image_url) {
-      html += '<img src="' + result.image_url + '" loading="lazy" style="width:100%;max-width:708px;height:auto;max-height:400px;object-fit:cover;border-radius:12px;display:block;margin:0 auto 24px;box-shadow:0 10px 25px rgba(0,0,0,0.1)" />';
+      html += '<img src="' + result.image_url + '" loading="lazy" style="width:100%;max-width:708px;height:320px;object-fit:cover;border-radius:12px;display:block;margin:0 auto 24px;box-shadow:0 10px 25px rgba(0,0,0,0.1)" />';
     }
 
-    // 2. Badge de resultado
-    if (result.label || rp.result_badge_label) {
-      html += '<div style="background:#fff8f0;border:1px solid #fde68a;border-left:4px solid #f97316;border-radius:12px;padding:16px 18px;margin-bottom:20px">';
-      if (rp.result_badge_label) html += '<p style="font-size:12px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 6px">' + rp.result_badge_label + '</p>';
-      if (result.label || band) html += '<div style="display:inline-block;background:' + bandColor + ';color:' + badgeTextColor + ';padding:10px 28px;border-radius:30px;font-size:16px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:8px">' + (result.label || band) + '</div>';
-      html += '</div>';
-    }
+    var sectionsOrder = rp.sections_order || ['badge', 'journey', 'comparison', 'diagnosis', 'needs', 'solution', 'how_it_works', 'deliverables', 'benefit', 'pricing', 'social_proof', 'urgency'];
 
-    // 3. Journey Chart SVG
-    if (rp.journey_title || rp.journey_days_badge) {
-      html += '<div style="margin-bottom:28px"><div style="text-align:center;margin-bottom:14px">';
-      if (rp.journey_title) html += '<h3 style="font-size:19px;font-weight:800;color:#1e293b;margin:0 0 6px">' + rp.journey_title + '</h3>';
-      if (rp.journey_subtitle) html += '<p style="font-size:13px;color:#64748b;margin:0">' + rp.journey_subtitle + '</p>';
-      html += '</div><div style="position:relative">';
-      if (rp.journey_days_badge) html += '<span style="position:absolute;top:8px;right:4px;background:#22c55e;color:#fff;font-size:11px;font-weight:800;padding:4px 10px;border-radius:20px;z-index:1">' + rp.journey_days_badge + '</span>';
-      html += '<svg viewBox="0 0 400 200" style="width:100%;height:auto;display:block" xmlns="http://www.w3.org/2000/svg">';
-      html += '<defs><linearGradient id="hbqGrad' + QUIZ_ID + '" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#ef4444"/><stop offset="40%" style="stop-color:#f97316"/><stop offset="70%" style="stop-color:#eab308"/><stop offset="100%" style="stop-color:#22c55e"/></linearGradient></defs>';
-      html += '<line x1="45" y1="20" x2="390" y2="20" stroke="#f1f5f9" stroke-width="1"/><line x1="45" y1="57" x2="390" y2="57" stroke="#f1f5f9" stroke-width="1"/><line x1="45" y1="94" x2="390" y2="94" stroke="#f1f5f9" stroke-width="1"/><line x1="45" y1="131" x2="390" y2="131" stroke="#f1f5f9" stroke-width="1"/><line x1="45" y1="168" x2="390" y2="168" stroke="#e2e8f0" stroke-width="1"/>';
-      html += '<text x="38" y="172" text-anchor="end" font-size="10" fill="#94a3b8">0</text><text x="38" y="135" text-anchor="end" font-size="10" fill="#94a3b8">25</text><text x="38" y="98" text-anchor="end" font-size="10" fill="#94a3b8">50</text><text x="38" y="61" text-anchor="end" font-size="10" fill="#94a3b8">75</text><text x="38" y="24" text-anchor="end" font-size="10" fill="#94a3b8">100</text>';
-      html += '<polygon points="48,168 390,168 390,20" fill="url(#hbqGrad' + QUIZ_ID + ')" opacity="0.88"/>';
-      html += '<circle cx="48" cy="168" r="7" fill="#ef4444" stroke="#fff" stroke-width="2.5"/><circle cx="390" cy="20" r="7" fill="#22c55e" stroke="#fff" stroke-width="2.5"/>';
-      if (rp.journey_label_today) html += '<text x="62" y="185" font-size="10" font-weight="700" fill="#ef4444">' + rp.journey_label_today + '</text>';
-      if (rp.journey_label_future) html += '<text x="388" y="14" font-size="10" font-weight="700" fill="#22c55e" text-anchor="end">' + rp.journey_label_future + '</text>';
-      html += '</svg></div></div>';
-    }
-
-    // 4. Comparativo com barras de progresso
-    if (compItems.length > 0 && (rp.comp_today_title || rp.comp_after_title)) {
-      html += '<div style="background:#fff;border:1px solid #e8e8e8;border-radius:16px;padding:20px;margin-bottom:24px"><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">';
-      html += '<div style="background:#fff;border-radius:12px;padding:14px;border:1px solid #e2e8f0"><div style="text-align:center;margin-bottom:12px"><span style="font-size:28px;display:block;margin-bottom:6px">' + (rp.comp_today_icon||'⏰') + '</span><span style="font-size:12px;font-weight:800;color:#475569;text-transform:uppercase">' + (rp.comp_today_title||'') + '</span></div>';
-      compItems.forEach(function(item) { if(item.today) html += '<div style="margin-bottom:10px"><div style="font-size:11px;font-weight:700;color:#1e293b;margin-bottom:3px;display:flex;justify-content:space-between"><span>' + item.today + '</span><span style="color:#94a3b8">' + Math.round(item.todayVal) + '%</span></div><div style="height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden"><div style="height:100%;width:' + item.todayVal + '%;background:#ef4444;border-radius:4px"></div></div></div>'; });
-      html += '</div>';
-      html += '<div style="background:#fff;border-radius:12px;padding:14px;border:1px solid #e2e8f0"><div style="text-align:center;margin-bottom:12px"><span style="font-size:28px;display:block;margin-bottom:6px">' + (rp.comp_after_icon||'✨') + '</span><span style="font-size:12px;font-weight:800;color:#475569;text-transform:uppercase">' + (rp.comp_after_title||'') + '</span></div>';
-      compItems.forEach(function(item) { if(item.after) html += '<div style="margin-bottom:10px"><div style="font-size:11px;font-weight:700;color:#1e293b;margin-bottom:3px;display:flex;justify-content:space-between"><span>' + item.after + '</span><span style="color:#94a3b8">100%</span></div><div style="height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden"><div style="height:100%;width:100%;background:linear-gradient(90deg,#22c55e,#5a9e42);border-radius:4px"></div></div></div>'; });
-      html += '</div></div></div>';
-    }
-
-    // 5. Diagnóstico + sintomas
-    if (rp.diagnosis_heading || symptoms.length > 0) {
-      html += '<div style="background:#f0fdf4;border:1px solid #dcfce7;border-radius:14px;padding:20px;margin-bottom:20px">';
-      if (rp.diagnosis_heading) html += '<p style="font-size:16px;font-weight:700;color:#166534;margin:0 0 12px">' + rp.diagnosis_heading + '</p>';
-      if (symptoms.length > 0) {
-        html += '<ul style="list-style:none;padding:0;margin:0">';
-        symptoms.forEach(function(sym) { html += '<li style="padding:10px 14px;font-size:14px;color:#065f46;background:rgba(16,185,129,0.05);border-radius:8px;margin-bottom:6px;font-weight:500;border-left:3px solid #10b981">' + sym + '</li>'; });
-        html += '</ul>';
+    sectionsOrder.forEach(function(sectionId) {
+      switch(sectionId) {
+        case 'badge':
+          if (result.label || rp.result_badge_label) {
+            html += '<div style="background:#fff8f0;border:1px solid #fde68a;border-left:4px solid #f97316;border-radius:12px;padding:16px 18px;margin-bottom:20px">';
+            if (rp.result_badge_label) html += '<p style="font-size:12px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 6px">' + rp.result_badge_label + '</p>';
+            if (result.label || band) html += '<div style="display:inline-block;background:' + bandColor + ';color:' + badgeTextColor + ';padding:10px 28px;border-radius:30px;font-size:16px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:8px">' + (result.label || band) + '</div>';
+            html += '</div>';
+          }
+          break;
+        case 'journey':
+          if (rp.journey_title || rp.journey_days_badge) {
+            html += '<div style="margin-bottom:28px"><div style="text-align:center;margin-bottom:14px">';
+            if (rp.journey_title) html += '<h3 style="font-size:19px;font-weight:800;color:#1e293b;margin:0 0 6px">' + rp.journey_title + '</h3>';
+            if (rp.journey_subtitle) html += '<p style="font-size:13px;color:#64748b;margin:0">' + rp.journey_subtitle + '</p>';
+            html += '</div><div style="position:relative">';
+            if (rp.journey_days_badge) html += '<span style="position:absolute;top:8px;right:4px;background:#22c55e;color:#fff;font-size:11px;font-weight:800;padding:4px 10px;border-radius:20px;z-index:1">' + rp.journey_days_badge + '</span>';
+            html += '<svg viewBox="0 0 400 200" style="width:100%;height:auto;display:block" xmlns="http://www.w3.org/2000/svg">';
+            html += '<defs><linearGradient id="hbqGrad' + QUIZ_ID + '" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#ef4444"/><stop offset="40%" style="stop-color:#f97316"/><stop offset="70%" style="stop-color:#eab308"/><stop offset="100%" style="stop-color:#22c55e"/></linearGradient></defs>';
+            html += '<line x1="45" y1="20" x2="390" y2="20" stroke="#f1f5f9" stroke-width="1"/><line x1="45" y1="57" x2="390" y2="57" stroke="#f1f5f9" stroke-width="1"/><line x1="45" y1="94" x2="390" y2="94" stroke="#f1f5f9" stroke-width="1"/><line x1="45" y1="131" x2="390" y2="131" stroke="#f1f5f9" stroke-width="1"/><line x1="45" y1="168" x2="390" y2="168" stroke="#e2e8f0" stroke-width="1"/>';
+            html += '<text x="38" y="172" text-anchor="end" font-size="10" fill="#94a3b8">0</text><text x="38" y="135" text-anchor="end" font-size="10" fill="#94a3b8">25</text><text x="38" y="98" text-anchor="end" font-size="10" fill="#94a3b8">50</text><text x="38" y="61" text-anchor="end" font-size="10" fill="#94a3b8">75</text><text x="38" y="24" text-anchor="end" font-size="10" fill="#94a3b8">100</text>';
+            html += '<polygon points="48,168 390,168 390,20" fill="url(#hbqGrad' + QUIZ_ID + ')" opacity="0.88"/>';
+            html += '<circle cx="48" cy="168" r="7" fill="#ef4444" stroke="#fff" stroke-width="2.5"/><circle cx="390" cy="20" r="7" fill="#22c55e" stroke="#fff" stroke-width="2.5"/>';
+            if (rp.journey_label_today) html += '<text x="62" y="185" font-size="10" font-weight="700" fill="#ef4444">' + rp.journey_label_today + '</text>';
+            if (rp.journey_label_future) html += '<text x="388" y="14" font-size="10" font-weight="700" fill="#22c55e" text-anchor="end">' + rp.journey_label_future + '</text>';
+            html += '</svg></div></div>';
+          }
+          break;
+        case 'comparison':
+          if (compItems.length > 0 && (rp.comp_today_title || rp.comp_after_title)) {
+            html += '<div style="background:#fff;border:1px solid #e8e8e8;border-radius:16px;padding:20px;margin-bottom:24px"><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">';
+            html += '<div style="background:#fff;border-radius:12px;padding:14px;border:1px solid #e2e8f0"><div style="text-align:center;margin-bottom:12px"><span style="font-size:28px;display:block;margin-bottom:6px">' + (rp.comp_today_icon||'⏰') + '</span><span style="font-size:12px;font-weight:800;color:#475569;text-transform:uppercase">' + (rp.comp_today_title||'') + '</span></div>';
+            compItems.forEach(function(item) { if(item.today) html += '<div style="margin-bottom:10px"><div style="font-size:11px;font-weight:700;color:#1e293b;margin-bottom:3px;display:flex;justify-content:space-between"><span>' + item.today + '</span><span style="color:#94a3b8">' + Math.round(item.todayVal) + '%</span></div><div style="height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden"><div style="height:100%;width:' + item.todayVal + '%;background:#ef4444;border-radius:4px"></div></div></div>'; });
+            html += '</div>';
+            html += '<div style="background:#fff;border-radius:12px;padding:14px;border:1px solid #e2e8f0"><div style="text-align:center;margin-bottom:12px"><span style="font-size:28px;display:block;margin-bottom:6px">' + (rp.comp_after_icon||'✨') + '</span><span style="font-size:12px;font-weight:800;color:#475569;text-transform:uppercase">' + (rp.comp_after_title||'') + '</span></div>';
+            compItems.forEach(function(item) { if(item.after) html += '<div style="margin-bottom:10px"><div style="font-size:11px;font-weight:700;color:#1e293b;margin-bottom:3px;display:flex;justify-content:space-between"><span>' + item.after + '</span><span style="color:#94a3b8">100%</span></div><div style="height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden"><div style="height:100%;width:100%;background:linear-gradient(90deg,#22c55e,#5a9e42);border-radius:4px"></div></div></div>'; });
+            html += '</div></div></div>';
+          }
+          break;
+        case 'diagnosis':
+          if (rp.diagnosis_heading || symptoms.length > 0) {
+            html += '<div style="background:#f0fdf4;border:1px solid #dcfce7;border-radius:14px;padding:20px;margin-bottom:20px">';
+            if (rp.diagnosis_heading) html += '<p style="font-size:16px;font-weight:700;color:#166534;margin:0 0 12px">' + rp.diagnosis_heading + '</p>';
+            if (symptoms.length > 0) {
+              html += '<ul style="list-style:none;padding:0;margin:0">';
+              symptoms.forEach(function(sym) { html += '<li style="padding:10px 14px;font-size:14px;color:#065f46;background:rgba(16,185,129,0.05);border-radius:8px;margin-bottom:6px;font-weight:500;border-left:3px solid #10b981">' + sym + '</li>'; });
+              html += '</ul>';
+            }
+            html += '</div>';
+          }
+          if (rp.goodnews_text) { html += '<div style="background:linear-gradient(135deg,#f0f7ed,#e8f5e3);border:1px solid #c5e1b5;border-radius:14px;padding:18px 20px;margin-bottom:20px"><p style="font-size:15px;color:#2d5a1e;line-height:1.5;margin:0">' + rp.goodnews_text + '</p></div>'; }
+          break;
+        case 'needs':
+          if (rp.needs_title || rp.needs_desc || rp.needs_cta) {
+            html += '<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:14px;padding:20px;margin-bottom:20px">';
+            if (rp.needs_title) html += '<h3 style="font-size:16px;font-weight:800;color:#14532d;margin:0 0 10px">' + rp.needs_title + '</h3>';
+            if (rp.needs_desc) html += '<p style="font-size:15px;color:#166534;margin:0 0 6px;line-height:1.5">' + rp.needs_desc + '</p>';
+            if (rp.needs_cta) html += '<p style="font-size:16px;font-weight:700;color:#15803d;margin:0">' + rp.needs_cta + '</p>';
+            html += '</div>';
+          }
+          break;
+        case 'solution':
+          if (rp.solution_title || rp.solution_desc) {
+            html += '<div style="background:linear-gradient(135deg,#f0f6ee,#e8f0e5);border:1px solid #c5ddb8;border-radius:16px;padding:28px 24px;margin-bottom:24px;position:relative;overflow:hidden">';
+            if (rp.solution_badge) html += '<div style="display:inline-block;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;font-size:12px;font-weight:800;padding:6px 14px;border-radius:20px;margin-bottom:14px;text-transform:uppercase">' + rp.solution_badge + '</div>';
+            if (rp.solution_title) html += '<h3 style="font-size:22px;font-weight:800;margin:0 0 12px;color:#333">' + rp.solution_title + '</h3>';
+            if (rp.solution_desc) html += '<div style="font-size:15px;color:#555;line-height:1.6;margin-bottom:16px">' + rp.solution_desc + '</div>';
+            var solItems = Array.isArray(rp.solution_items) ? rp.solution_items.filter(Boolean) : [];
+            if (solItems.length) { html += '<ul style="list-style:none;padding:0;margin:16px 0">'; solItems.forEach(function(item) { html += '<li style="margin-bottom:10px;font-size:15px;padding:10px 14px;background:rgba(66,106,53,0.08);border-radius:8px;font-weight:500;color:#333">' + item + '</li>'; }); html += '</ul>'; }
+            html += '</div>';
+          }
+          break;
+        case 'how_it_works':
+          if (rp.step_1_title || rp.step_2_title) {
+            html += '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:24px 20px;margin-bottom:24px">';
+            html += '<h3 style="font-size:15px;font-weight:800;color:#1e293b;margin:0 0 16px">🪜 ' + (lang==='pt'?'COMO FUNCIONA':'CÓMO FUNCIONA') + '</h3>';
+            if (rp.step_1_title) { html += '<div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:12px"><span style="font-size:28px;flex-shrink:0">' + (rp.step_1_icon||'🥗') + '</span><div><strong style="display:block;font-size:15px;font-weight:700;color:#1e293b;margin-bottom:4px">' + rp.step_1_title + '</strong><p style="font-size:14px;color:#64748b;margin:0;line-height:1.4">' + (rp.step_1_text||'') + '</p></div></div>'; }
+            if (rp.step_2_title) { html += '<div style="display:flex;gap:12px;align-items:flex-start"><span style="font-size:28px;flex-shrink:0">' + (rp.step_2_icon||'🔥') + '</span><div><strong style="display:block;font-size:15px;font-weight:700;color:#1e293b;margin-bottom:4px">' + rp.step_2_title + '</strong><p style="font-size:14px;color:#64748b;margin:0;line-height:1.4">' + (rp.step_2_text||'') + '</p></div></div>'; }
+            html += '</div>';
+          }
+          break;
+        case 'deliverables':
+          var deliverables = Array.isArray(rp.deliverables) ? rp.deliverables.filter(Boolean) : [];
+          if (deliverables.length || rp.deliverables_title) {
+            html += '<div style="background:linear-gradient(135deg,#f0f6ee,#e8f0e5);border:1px solid #c5ddb8;border-radius:16px;padding:20px;margin-bottom:20px">';
+            if (rp.deliverables_title) html += '<h3 style="font-size:16px;font-weight:800;color:#14532d;margin:0 0 14px">' + rp.deliverables_title + '</h3>';
+            if (deliverables.length) {
+              html += '<ul style="list-style:none;padding:0;margin:0">';
+              deliverables.forEach(function(d) { html += '<li style="padding:10px 0;font-size:15px;color:#166534;font-weight:600;border-bottom:1px solid rgba(66,106,53,0.15)">✔ ' + d + '</li>'; });
+              html += '</ul>';
+            }
+            html += '</div>';
+          }
+          break;
+        case 'benefit':
+          if (rp.benefit_text) {
+            html += '<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:14px;padding:16px 18px;margin-bottom:20px;text-align:center">';
+            if (rp.benefit_badge_label) html += '<span style="display:inline-block;background:#f59e0b;color:#fff;font-size:12px;font-weight:800;padding:4px 12px;border-radius:20px;margin-bottom:10px;text-transform:uppercase">' + rp.benefit_badge_label + '</span>';
+            html += '<p style="font-size:15px;font-weight:600;color:#92400e;margin:0">' + rp.benefit_text + '</p></div>';
+          }
+          break;
+        case 'pricing':
+          if (rp.price_to || rp.cta_text) {
+            html += '<div style="background:#fff;border:1px solid #e0e0e0;border-radius:16px;overflow:hidden;margin-bottom:24px">';
+            var pricingFeatures = Array.isArray(rp.pricing_features) ? rp.pricing_features.filter(Boolean) : [];
+            html += '<div style="display:flex">';
+            if (pricingFeatures.length) { html += '<div style="flex:1;background:#f0f6ee;padding:20px"><ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px">'; pricingFeatures.forEach(function(f) { html += '<li style="font-size:13px;color:#166534;font-weight:600">✔ ' + f + '</li>'; }); html += '</ul></div>'; }
+            html += '<div style="flex:1;padding:20px;text-align:center">';
+            if (rp.offer_label) html += '<p style="font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 8px">' + rp.offer_label + '</p>';
+            if (rp.price_from) html += '<p style="font-size:14px;color:#94a3b8;margin:0 0 4px">DE <span style="text-decoration:line-through">' + rp.price_from + '</span></p>';
+            if (rp.offer_sublabel) html += '<p style="font-size:14px;color:#475569;font-weight:600;margin:0 0 4px">' + rp.offer_sublabel + '</p>';
+            if (rp.price_to) html += '<div style="display:flex;align-items:flex-end;justify-content:center;gap:4px;margin-bottom:16px;line-height:1"><span style="font-size:56px;font-weight:900;color:#1e293b;line-height:1">' + rp.price_to + '</span><span style="font-size:18px;font-weight:700;color:#64748b;margin-bottom:8px">' + (rp.price_currency||'') + '</span></div>';
+            html += '</div></div>';
+            html += '<div style="padding:20px;text-align:center">';
+            if (rp.cta_text) html += '<a href="' + ctaUrl + '" target="_blank" style="display:block;background:#426A35;color:#fff;padding:20px;border-radius:12px;font-weight:800;font-size:18px;text-decoration:none;box-shadow:0 6px 20px rgba(66,106,53,0.3);margin-bottom:12px">' + rp.cta_text + '</a>';
+            if (rp.guarantee_text) html += '<p style="font-size:13px;color:#64748b;margin:0 0 4px">' + rp.guarantee_text + '</p>';
+            if (rp.offer_footer_1) html += '<p style="font-size:12px;color:#888;margin:0 0 2px">' + rp.offer_footer_1 + '</p>';
+            if (rp.offer_footer_2) html += '<p style="font-size:12px;color:#888;margin:0">' + rp.offer_footer_2 + '</p>';
+            html += '</div></div>';
+          }
+          break;
+        case 'social_proof':
+          if (rp.show_social_proof && rp.gallery_ids) {
+            var galleryUrls = String(rp.gallery_ids).split(',').map(function(u){return u.trim();}).filter(Boolean);
+            if (galleryUrls.length) {
+              html += '<div style="margin-bottom:24px;text-align:center">';
+              if (rp.social_proof_title) html += '<p style="font-weight:700;margin-bottom:4px;font-size:17px">' + rp.social_proof_title + '</p>';
+              if (rp.social_proof_subtitle) html += '<p style="font-weight:600;color:#4a6d41;font-size:14px;margin-bottom:12px">' + rp.social_proof_subtitle + '</p>';
+              html += '<div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:8px">';
+              galleryUrls.forEach(function(url){ html += '<img src="' + url + '" loading="lazy" style="min-width:280px;height:200px;object-fit:cover;border-radius:12px" />'; });
+              html += '</div></div>';
+            }
+          }
+          break;
+        case 'urgency':
+          if (rp.urgency_text) { html += '<div style="background:#fff3cd;border:1px solid #ffc107;border-radius:16px;padding:20px;margin-bottom:20px;text-align:center"><p style="font-size:15px;color:#856404;margin:0">' + rp.urgency_text + '</p></div>'; }
+          break;
       }
-      html += '</div>';
-    }
-
-    // 6. Boa notícia
-    if (rp.goodnews_text) { html += '<div style="background:linear-gradient(135deg,#f0f7ed,#e8f5e3);border:1px solid #c5e1b5;border-radius:14px;padding:18px 20px;margin-bottom:20px"><p style="font-size:15px;color:#2d5a1e;line-height:1.5;margin:0">' + rp.goodnews_text + '</p></div>'; }
-
-    // 7. O que seu corpo precisa
-    if (rp.needs_title || rp.needs_desc || rp.needs_cta) {
-      html += '<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:14px;padding:20px;margin-bottom:20px">';
-      if (rp.needs_title) html += '<h3 style="font-size:16px;font-weight:800;color:#14532d;margin:0 0 10px">' + rp.needs_title + '</h3>';
-      if (rp.needs_desc) html += '<p style="font-size:15px;color:#166534;margin:0 0 6px;line-height:1.5">' + rp.needs_desc + '</p>';
-      if (rp.needs_cta) html += '<p style="font-size:16px;font-weight:700;color:#15803d;margin:0">' + rp.needs_cta + '</p>';
-      html += '</div>';
-    }
-
-    // 8. Solução
-    if (rp.solution_title || rp.solution_desc) {
-      html += '<div style="background:linear-gradient(135deg,#f0f6ee,#e8f0e5);border:1px solid #c5ddb8;border-radius:16px;padding:28px 24px;margin-bottom:24px;position:relative;overflow:hidden">';
-      if (rp.solution_badge) html += '<div style="display:inline-block;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;font-size:12px;font-weight:800;padding:6px 14px;border-radius:20px;margin-bottom:14px;text-transform:uppercase">' + rp.solution_badge + '</div>';
-      if (rp.solution_title) html += '<h3 style="font-size:22px;font-weight:800;margin:0 0 12px;color:#333">' + rp.solution_title + '</h3>';
-      if (rp.solution_desc) html += '<div style="font-size:15px;color:#555;line-height:1.6;margin-bottom:16px">' + rp.solution_desc + '</div>';
-      var solItems = Array.isArray(rp.solution_items) ? rp.solution_items.filter(Boolean) : [];
-      if (solItems.length) { html += '<ul style="list-style:none;padding:0;margin:16px 0">'; solItems.forEach(function(item) { html += '<li style="margin-bottom:10px;font-size:15px;padding:10px 14px;background:rgba(66,106,53,0.08);border-radius:8px;font-weight:500;color:#333">' + item + '</li>'; }); html += '</ul>'; }
-      html += '</div>';
-    }
-
-    // 9. Como funciona
-    if (rp.step_1_title || rp.step_2_title) {
-      html += '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:24px 20px;margin-bottom:24px">';
-      html += '<h3 style="font-size:15px;font-weight:800;color:#1e293b;margin:0 0 16px">🪜 ' + (lang==='pt'?'COMO FUNCIONA':'CÓMO FUNCIONA') + '</h3>';
-      if (rp.step_1_title) { html += '<div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:12px"><span style="font-size:28px;flex-shrink:0">' + (rp.step_1_icon||'🥗') + '</span><div><strong style="display:block;font-size:15px;font-weight:700;color:#1e293b;margin-bottom:4px">' + rp.step_1_title + '</strong><p style="font-size:14px;color:#64748b;margin:0;line-height:1.4">' + (rp.step_1_text||'') + '</p></div></div>'; }
-      if (rp.step_2_title) { html += '<div style="display:flex;gap:12px;align-items:flex-start"><span style="font-size:28px;flex-shrink:0">' + (rp.step_2_icon||'🔥') + '</span><div><strong style="display:block;font-size:15px;font-weight:700;color:#1e293b;margin-bottom:4px">' + rp.step_2_title + '</strong><p style="font-size:14px;color:#64748b;margin:0;line-height:1.4">' + (rp.step_2_text||'') + '</p></div></div>'; }
-      html += '</div>';
-    }
-
-    // 10. Entregáveis
-    var deliverables = Array.isArray(rp.deliverables) ? rp.deliverables.filter(Boolean) : [];
-    if (deliverables.length || rp.deliverables_title) {
-      html += '<div style="background:linear-gradient(135deg,#f0f6ee,#e8f0e5);border:1px solid #c5ddb8;border-radius:16px;padding:20px;margin-bottom:20px">';
-      if (rp.deliverables_title) html += '<h3 style="font-size:16px;font-weight:800;color:#14532d;margin:0 0 14px">' + rp.deliverables_title + '</h3>';
-      if (deliverables.length) {
-        html += '<ul style="list-style:none;padding:0;margin:0">';
-        deliverables.forEach(function(d) { html += '<li style="padding:10px 0;font-size:15px;color:#166534;font-weight:600;border-bottom:1px solid rgba(66,106,53,0.15)">✔ ' + d + '</li>'; });
-        html += '</ul>';
-      }
-      html += '</div>';
-    }
-
-    // 11. Benefício imediato
-    if (rp.benefit_text) {
-      html += '<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:14px;padding:16px 18px;margin-bottom:20px;text-align:center">';
-      if (rp.benefit_badge_label) html += '<span style="display:inline-block;background:#f59e0b;color:#fff;font-size:12px;font-weight:800;padding:4px 12px;border-radius:20px;margin-bottom:10px;text-transform:uppercase">' + rp.benefit_badge_label + '</span>';
-      html += '<p style="font-size:15px;font-weight:600;color:#92400e;margin:0">' + rp.benefit_text + '</p></div>';
-    }
-
-    // 12. Pricing card
-    if (rp.price_to || rp.cta_text) {
-      html += '<div style="background:#fff;border:1px solid #e0e0e0;border-radius:16px;overflow:hidden;margin-bottom:24px">';
-      var pricingFeatures = Array.isArray(rp.pricing_features) ? rp.pricing_features.filter(Boolean) : [];
-      html += '<div style="display:flex">';
-      if (pricingFeatures.length) { html += '<div style="flex:1;background:#f0f6ee;padding:20px"><ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px">'; pricingFeatures.forEach(function(f) { html += '<li style="font-size:13px;color:#166534;font-weight:600">✔ ' + f + '</li>'; }); html += '</ul></div>'; }
-      html += '<div style="flex:1;padding:20px;text-align:center">';
-      if (rp.offer_label) html += '<p style="font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 8px">' + rp.offer_label + '</p>';
-      if (rp.price_from) html += '<p style="font-size:14px;color:#94a3b8;margin:0 0 4px">DE <span style="text-decoration:line-through">' + rp.price_from + '</span></p>';
-      if (rp.offer_sublabel) html += '<p style="font-size:14px;color:#475569;font-weight:600;margin:0 0 4px">' + rp.offer_sublabel + '</p>';
-      if (rp.price_to) html += '<div style="display:flex;align-items:flex-end;justify-content:center;gap:4px;margin-bottom:16px;line-height:1"><span style="font-size:56px;font-weight:900;color:#1e293b;line-height:1">' + rp.price_to + '</span><span style="font-size:18px;font-weight:700;color:#64748b;margin-bottom:8px">' + (rp.price_currency||'') + '</span></div>';
-      html += '</div></div>';
-      html += '<div style="padding:20px;text-align:center">';
-      if (rp.cta_text) html += '<a href="' + ctaUrl + '" target="_blank" style="display:block;background:#426A35;color:#fff;padding:20px;border-radius:12px;font-weight:800;font-size:18px;text-decoration:none;box-shadow:0 6px 20px rgba(66,106,53,0.3);margin-bottom:12px">' + rp.cta_text + '</a>';
-      if (rp.guarantee_text) html += '<p style="font-size:13px;color:#64748b;margin:0 0 4px">' + rp.guarantee_text + '</p>';
-      if (rp.offer_footer_1) html += '<p style="font-size:12px;color:#888;margin:0 0 2px">' + rp.offer_footer_1 + '</p>';
-      if (rp.offer_footer_2) html += '<p style="font-size:12px;color:#888;margin:0">' + rp.offer_footer_2 + '</p>';
-      html += '</div></div>';
-    }
-
-    // 13. Prova social
-    if (rp.show_social_proof && rp.gallery_ids) {
-      var galleryUrls = String(rp.gallery_ids).split(',').map(function(u){return u.trim();}).filter(Boolean);
-      if (galleryUrls.length) {
-        html += '<div style="margin-bottom:24px;text-align:center">';
-        if (rp.social_proof_title) html += '<p style="font-weight:700;margin-bottom:4px;font-size:17px">' + rp.social_proof_title + '</p>';
-        if (rp.social_proof_subtitle) html += '<p style="font-weight:600;color:#4a6d41;font-size:14px;margin-bottom:12px">' + rp.social_proof_subtitle + '</p>';
-        html += '<div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:8px">';
-        galleryUrls.forEach(function(url){ html += '<img src="' + url + '" loading="lazy" style="min-width:280px;height:200px;object-fit:cover;border-radius:12px" />'; });
-        html += '</div></div>';
-      }
-    }
-
-    // 14. Urgência final
-    if (rp.urgency_text) { html += '<div style="background:#fff3cd;border:1px solid #ffc107;border-radius:16px;padding:20px;margin-bottom:20px;text-align:center"><p style="font-size:15px;color:#856404;margin:0">' + rp.urgency_text + '</p></div>'; }
+    });
 
     html += '</div>';
     render(html);
+  }
   }
 
   function init() {
@@ -451,12 +509,13 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     var s = state.quiz.settings || {};
     state.totalQuestions = (state.quiz.questions || []).length;
     
-    // Se show_landing não estiver definido (quiz antigo), assume true se houver headline ou imagem
-    var shouldShowLanding = s.show_landing === true || (s.show_landing === undefined && (s.headline || s.landing_image));
+    // show_landing deve ser explicitamente checado
+    var showLanding = s.show_landing === true;
+    var hasLeadCapture = !!(s.name_capture || s.email_capture || s.whatsapp_capture);
     
-    if (shouldShowLanding) {
+    if (showLanding) {
       renderLanding();
-    } else if (s.name_capture || s.email_capture || s.whatsapp_capture) {
+    } else if (hasLeadCapture) {
       renderLead();
     } else {
       state.currentQuestion = 0;

@@ -1,4 +1,13 @@
 'use client'
+import {
+  
+  DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { Toggle } from '@/components/ui/Toggle'
 import type { QuizSettings } from '@/lib/sanitize'
 
@@ -6,6 +15,21 @@ interface Props {
   settings: QuizSettings
   onChange: (s: QuizSettings) => void
 }
+
+const DEFAULT_SECTIONS = [
+  { id: 'badge', title: '🏷️ Badge de resultado' },
+  { id: 'journey', title: '📈 Jornada (Journey Chart)' },
+  { id: 'comparison', title: '📊 Comparativo (hoje vs depois)' },
+  { id: 'diagnosis', title: '🩺 Diagnóstico' },
+  { id: 'needs', title: '🎯 O que seu corpo precisa' },
+  { id: 'solution', title: '💊 Solução' },
+  { id: 'how_it_works', title: '🪜 Como funciona' },
+  { id: 'deliverables', title: '🎁 Entregáveis' },
+  { id: 'benefit', title: '⚡ Benefício imediato' },
+  { id: 'pricing', title: '💰 Oferta / Pricing' },
+  { id: 'social_proof', title: '📸 Prova Social' },
+  { id: 'urgency', title: '⚠️ Urgência final' },
+]
 
 const inp = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-label focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary'
 
@@ -18,17 +42,41 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   )
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function SortableSection({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id })
+  const style = { transform: CSS.Transform.toString(transform), transition }
+
   return (
-    <section className="space-y-4 rounded-xl border border-gray-200 p-4">
-      <h3 className="text-title font-bold text-gray-700">{title}</h3>
-      {children}
+    <section ref={setNodeRef} style={style} className="space-y-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+      <div className="flex items-center gap-3 border-b border-gray-100 pb-3">
+        <span {...attributes} {...listeners} className="cursor-grab text-gray-400 hover:text-gray-600">⠿</span>
+        <h3 className="text-sm font-bold text-gray-700 uppercase tracking-tight">{title}</h3>
+      </div>
+      <div className="pt-2">
+        {children}
+      </div>
     </section>
   )
 }
 
 export function Step5ResultPage({ settings, onChange }: Props) {
   const rp = (settings.result_page ?? {}) as Record<string, unknown>
+  const sectionsOrder = (rp.sections_order as string[]) || DEFAULT_SECTIONS.map(s => s.id)
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  )
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event
+    if (over && active.id !== over.id) {
+      const oldIndex = sectionsOrder.indexOf(active.id as string)
+      const newIndex = sectionsOrder.indexOf(over.id as string)
+      const next = arrayMove(sectionsOrder, oldIndex, newIndex)
+      onChange({ ...settings, result_page: { ...rp, sections_order: next } })
+    }
+  }
 
   function setRp(key: string) {
     return (val: unknown) => onChange({ ...settings, result_page: { ...rp, [key]: val } })
@@ -66,35 +114,32 @@ export function Step5ResultPage({ settings, onChange }: Props) {
     )
   }
 
-  return (
-    <div className="space-y-6">
-      <h2 className="text-headline font-bold text-gray-800">5. Página de Resultado</h2>
+  const renderSection = (id: string) => {
+    const s = DEFAULT_SECTIONS.find(x => x.id === id)
+    if (!s) return null
 
-      <Field label="Tipo da página">
-        <select className={inp} value={(rp.type as string) ?? 'standard'} onChange={(e) => setRp('type')(e.target.value)}>
-          <option value="standard">Padrão (template)</option>
-          <option value="manual">HTML Manual</option>
-        </select>
-      </Field>
-
-      {rp.type === 'manual' ? (
-        textarea('HTML Manual', 'manual_html', 10)
-      ) : (
-        <div className="space-y-6">
-
-          <Section title="🏷️ Badge de resultado">
+    switch (id) {
+      case 'badge':
+        return (
+          <SortableSection key={id} id={id} title={s.title}>
             {text('Label do badge', 'result_badge_label', '⚠️ TU RESULTADO basado en tus respuestas:')}
-          </Section>
-
-          <Section title="📈 Jornada (Journey Chart)">
+          </SortableSection>
+        )
+      case 'journey':
+        return (
+          <SortableSection key={id} id={id} title={s.title}>
             {text('Título', 'journey_title', 'Tu Jornada en los Próximos 30 Días')}
             {text('Subtítulo', 'journey_subtitle')}
-            {text('Label Hoje', 'journey_label_today', 'HOY')}
-            {text('Label Futuro', 'journey_label_future', 'EN 30 DÍAS')}
+            <div className="grid grid-cols-2 gap-3">
+              {text('Label Hoje', 'journey_label_today', 'HOY')}
+              {text('Label Futuro', 'journey_label_future', 'EN 30 DÍAS')}
+            </div>
             {text('Badge de dias', 'journey_days_badge', '30 DÍAS')}
-          </Section>
-
-          <Section title="📊 Comparativo (hoje vs depois)">
+          </SortableSection>
+        )
+      case 'comparison':
+        return (
+          <SortableSection key={id} id={id} title={s.title}>
             <div className="grid grid-cols-2 gap-3">
               {text('Ícone coluna Hoje', 'comp_today_icon')}
               {text('Ícone coluna Depois', 'comp_after_icon')}
@@ -103,70 +148,100 @@ export function Step5ResultPage({ settings, onChange }: Props) {
             </div>
             <div className="grid grid-cols-2 gap-3">
               {[1,2,3,4].map(i => (
-                <div key={i} className="space-y-2 rounded-lg bg-gray-50 p-3">
-                  <p className="text-xs font-semibold text-gray-500">Item {i}</p>
+                <div key={i} className="space-y-2 rounded-lg bg-gray-50 p-3 border border-gray-100">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase">Item {i}</p>
                   <input className={inp} placeholder="Hoje" value={(rp[`comp_item_${i}_today`] as string) ?? ''} onChange={(e) => setRp(`comp_item_${i}_today`)(e.target.value)} />
                   <input className={inp} placeholder="Depois" value={(rp[`comp_item_${i}_after`] as string) ?? ''} onChange={(e) => setRp(`comp_item_${i}_after`)(e.target.value)} />
                 </div>
               ))}
             </div>
-          </Section>
-
-          <Section title="🩺 Diagnóstico">
+          </SortableSection>
+        )
+      case 'diagnosis':
+        return (
+          <SortableSection key={id} id={id} title={s.title}>
             {text('Heading do diagnóstico', 'diagnosis_heading', '⚠️ Lo que esto significa en la prática:')}
             {textarea('Texto boa notícia', 'goodnews_text')}
-          </Section>
-
-          <Section title="🎯 O que seu corpo precisa">
+          </SortableSection>
+        )
+      case 'needs':
+        return (
+          <SortableSection key={id} id={id} title={s.title}>
             {text('Título', 'needs_title')}
             {text('Descrição', 'needs_desc')}
             {text('CTA', 'needs_cta')}
-          </Section>
-
-          <Section title="💊 Solução">
+          </SortableSection>
+        )
+      case 'solution':
+        return (
+          <SortableSection key={id} id={id} title={s.title}>
             {text('Badge da solução', 'solution_badge')}
             {text('Título', 'solution_title')}
             {textarea('Descrição', 'solution_desc')}
             {listField('Itens da solução (até 4)', 'solution_items', 4, 'Item')}
-          </Section>
-
-          <Section title="🪜 Como funciona">
+          </SortableSection>
+        )
+      case 'how_it_works':
+        return (
+          <SortableSection key={id} id={id} title={s.title}>
             <div className="grid grid-cols-2 gap-3">
               {text('Ícone passo 1', 'step_1_icon')}
               {text('Ícone passo 2', 'step_2_icon')}
             </div>
-            {text('Título passo 1', 'step_1_title')}
-            {text('Texto passo 1', 'step_1_text')}
-            {text('Título passo 2', 'step_2_title')}
-            {text('Texto passo 2', 'step_2_text')}
-          </Section>
-
-          <Section title="🎁 Entregáveis">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-3">
+                {text('Título passo 1', 'step_1_title')}
+                {text('Texto passo 1', 'step_1_text')}
+              </div>
+              <div className="space-y-3">
+                {text('Título passo 2', 'step_2_title')}
+                {text('Texto passo 2', 'step_2_text')}
+              </div>
+            </div>
+          </SortableSection>
+        )
+      case 'deliverables':
+        return (
+          <SortableSection key={id} id={id} title={s.title}>
             {text('Título', 'deliverables_title')}
             {listField('Entregáveis (até 6)', 'deliverables', 6, 'Entregável')}
-          </Section>
-
-          <Section title="⚡ Benefício imediato">
+          </SortableSection>
+        )
+      case 'benefit':
+        return (
+          <SortableSection key={id} id={id} title={s.title}>
             {text('Badge', 'benefit_badge_label')}
             {text('Texto', 'benefit_text')}
-          </Section>
-
-          <Section title="💰 Oferta / Pricing">
-            {text('Label oferta', 'offer_label')}
-            {text('Sub-label', 'offer_sublabel')}
-            {listField('Features do pricing (até 3)', 'pricing_features', 3, 'Feature')}
-            <div className="grid grid-cols-3 gap-3">
+          </SortableSection>
+        )
+      case 'pricing':
+        return (
+          <SortableSection key={id} id={id} title={s.title}>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-3">
+                {text('Label oferta', 'offer_label')}
+                {text('Sub-label', 'offer_sublabel')}
+              </div>
+              <div className="space-y-3">
+                {listField('Features do pricing (até 3)', 'pricing_features', 3, 'Feature')}
+              </div>
+            </div>
+            <div className="grid grid-cols-4 gap-3">
               {text('Preço DE', 'price_from')}
               {text('Preço POR', 'price_to')}
               {text('Moeda', 'price_currency')}
+              {text('Texto do CTA', 'cta_text')}
             </div>
-            {text('Texto do CTA', 'cta_text')}
-            {text('Garantia', 'guarantee_text')}
-            {text('Rodapé 1', 'offer_footer_1')}
-            {text('Rodapé 2', 'offer_footer_2')}
-          </Section>
-
-          <Section title="📸 Prova Social">
+            <div className="grid grid-cols-3 gap-3">
+              {text('Garantia', 'guarantee_text')}
+              {text('Rodapé 1', 'offer_footer_1')}
+              {text('Rodapé 2', 'offer_footer_2')}
+            </div>
+          </SortableSection>
+        )
+      case 'social_proof':
+        return (
+          <SortableSection key={id} id={id} title={s.title}>
             <Field label="Exibir prova social">
               <Toggle
                 checked={Boolean(rp.show_social_proof)}
@@ -174,7 +249,7 @@ export function Step5ResultPage({ settings, onChange }: Props) {
               />
             </Field>
             {Boolean(rp.show_social_proof) && (
-              <>
+              <div className="space-y-3 mt-3">
                 {text('Título', 'social_proof_title')}
                 {text('Subtítulo', 'social_proof_subtitle')}
                 <Field label="URLs das imagens (separadas por vírgula)">
@@ -186,15 +261,45 @@ export function Step5ResultPage({ settings, onChange }: Props) {
                     onChange={(e) => setRp('gallery_ids')(e.target.value)}
                   />
                 </Field>
-              </>
+              </div>
             )}
-          </Section>
-
-          <Section title="⚠️ Urgência final">
+          </SortableSection>
+        )
+      case 'urgency':
+        return (
+          <SortableSection key={id} id={id} title={s.title}>
             {textarea('Texto de urgência', 'urgency_text')}
-          </Section>
+          </SortableSection>
+        )
+      default:
+        return null
+    }
+  }
 
-        </div>
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-headline font-bold text-gray-800">5. Página de Resultado</h2>
+        <div className="text-[10px] font-bold text-gray-400 uppercase bg-gray-100 px-2 py-1 rounded">Mova os blocos para reordenar</div>
+      </div>
+
+      <Field label="Tipo da página">
+        <select className={inp} value={(rp.type as string) ?? 'standard'} onChange={(e) => setRp('type')(e.target.value)}>
+          <option value="standard">Padrão (template)</option>
+          <option value="manual">HTML Manual</option>
+        </select>
+      </Field>
+
+      {rp.type === 'manual' ? (
+        textarea('HTML Manual', 'manual_html', 10)
+      ) : (
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={sectionsOrder} strategy={verticalListSortingStrategy}>
+            <div className="space-y-4">
+              {sectionsOrder.map(id => renderSection(id))}
+            </div>
+          </SortableContext>
+        </DndContext>
       )}
     </div>
   )

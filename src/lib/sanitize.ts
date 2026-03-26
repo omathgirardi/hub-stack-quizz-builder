@@ -52,13 +52,17 @@ export interface QuizSettings {
   whatsapp_msg?: string
   name_placeholder?: string
   email_placeholder?: string
+  lead_fields_order?: string[]
   results?: {
     leve?: BandSettings
     moderada?: BandSettings
     moderada_avancada?: BandSettings
     avancada?: BandSettings
   }
-  result_page?: Record<string, unknown>
+  result_page?: {
+    sections_order?: string[]
+    [key: string]: unknown
+  }
 }
 
 export function sanitizeQuestions(raw: unknown): Question[] {
