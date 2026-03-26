@@ -55,11 +55,11 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     var s = state.quiz.settings || {};
     render(
       '<div style="text-align:center;padding:24px">' +
-      (s.landing_image ? '<img src="' + s.landing_image + '" style="max-width:100%;border-radius:12px;margin-bottom:16px" />' : '') +
-      '<h2 style="font-size:1.4em;font-weight:700;margin-bottom:8px">' + (s.headline || state.quiz.title) + '</h2>' +
-      '<p style="color:#555;margin-bottom:16px">' + (s.subheadline || '') + '</p>' +
-      (s.urgency_text ? '<p style="color:#e53e3e;font-size:0.9em;margin-bottom:12px">' + s.urgency_text + '</p>' : '') +
-      '<button id="hbq-start" style="background:#2563eb;color:#fff;border:none;padding:14px 32px;border-radius:8px;font-size:1em;font-weight:600;cursor:pointer">' + (s.cta_button || 'Iniciar Quiz') + '</button>' +
+      (s.landing_image ? '<img src="' + s.landing_image + '" style="width:100%;max-width:500px;border-radius:12px;margin:0 auto 20px;display:block" />' : '') +
+      '<h2 style="font-size:1.6em;font-weight:700;margin-bottom:12px;color:#1a202c">' + (s.headline || state.quiz.title) + '</h2>' +
+      '<div style="color:#4a5568;margin-bottom:24px;line-height:1.6">' + (s.subheadline || '') + '</div>' +
+      (s.urgency_text ? '<p style="color:#dc2626;font-size:0.95em;font-weight:600;margin-bottom:20px;background:#fef2f2;padding:10px;border-radius:8px">' + s.urgency_text + '</p>' : '') +
+      '<button id="hbq-start" style="background:#426a35;color:#fff;border:none;padding:16px 48px;border-radius:12px;font-size:1.1em;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(66,106,53,0.3);transition:transform 0.2s" onmouseover="this.style.transform=\'scale(1.02)\'" onmouseout="this.style.transform=\'scale(1)\'">' + (s.cta_button || 'Iniciar Quiz') + '</button>' +
       '</div>'
     );
     document.getElementById('hbq-start').onclick = function() {
@@ -75,15 +75,17 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   function renderLead() {
     var s = state.quiz.settings || {};
     var fields = '';
-    if (s.name_capture) fields += '<input id="hbq-name" type="text" placeholder="' + (s.name_placeholder || 'Seu nome') + '" style="width:100%;padding:10px;margin-bottom:10px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;font-size:1em" />';
-    if (s.email_capture) fields += '<input id="hbq-email" type="email" placeholder="' + (s.email_placeholder || 'Seu e-mail') + '" style="width:100%;padding:10px;margin-bottom:10px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;font-size:1em" />';
-    if (s.whatsapp_capture) fields += '<input id="hbq-whatsapp" type="tel" placeholder="' + (s.whatsapp_label || 'Seu WhatsApp') + '" style="width:100%;padding:10px;margin-bottom:10px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;font-size:1em" />';
+    var inputStyle = 'width:100%;padding:14px;margin-bottom:12px;border:1px solid #e2e8f0;border-radius:10px;box-sizing:border-box;font-size:1em;outline:none;transition:border-color 0.2s';
+    
+    if (s.name_capture) fields += '<div style="margin-bottom:4px;text-align:left;font-size:0.9em;font-weight:600;color:#4a5568">' + (s.name_label || 'Nombre') + '</div><input id="hbq-name" type="text" placeholder="' + (s.name_placeholder || 'Tu nombre') + '" style="' + inputStyle + '" onfocus="this.style.borderColor=\'#426a35\'" onblur="this.style.borderColor=\'#e2e8f0\'" />';
+    if (s.email_capture) fields += '<div style="margin-bottom:4px;text-align:left;font-size:0.9em;font-weight:600;color:#4a5568">' + (s.email_label || 'E-mail') + '</div><input id="hbq-email" type="email" placeholder="' + (s.email_placeholder || 'tu@email.com') + '" style="' + inputStyle + '" onfocus="this.style.borderColor=\'#426a35\'" onblur="this.style.borderColor=\'#e2e8f0\'" />';
+    if (s.whatsapp_capture) fields += '<div style="margin-bottom:4px;text-align:left;font-size:0.9em;font-weight:600;color:#4a5568">' + (s.whatsapp_label || 'WhatsApp') + '</div><input id="hbq-whatsapp" type="tel" placeholder="' + (s.whatsapp_placeholder || '+54...') + '" style="' + inputStyle + '" onfocus="this.style.borderColor=\'#426a35\'" onblur="this.style.borderColor=\'#e2e8f0\'" />';
 
     render(
-      '<div style="padding:24px">' +
-      '<h3 style="margin-bottom:16px;font-size:1.2em">' + (s.lead_headline || 'Antes de começar...') + '</h3>' +
+      '<div style="padding:32px;text-align:center">' +
+      '<h3 style="margin-bottom:24px;font-size:1.4em;font-weight:700;color:#1a202c">' + (s.lead_headline || 'Antes de começar...') + '</h3>' +
       fields +
-      '<button id="hbq-lead-next" style="background:#2563eb;color:#fff;border:none;padding:12px 28px;border-radius:8px;font-size:1em;font-weight:600;cursor:pointer;width:100%">Continuar</button>' +
+      '<button id="hbq-lead-next" style="background:#426a35;color:#fff;border:none;padding:16px;border-radius:12px;font-size:1.1em;font-weight:700;cursor:pointer;width:100%;margin-top:8px;box-shadow:0 4px 12px rgba(66,106,53,0.3)">Continuar</button>' +
       '</div>'
     );
     document.getElementById('hbq-lead-next').onclick = function() {
@@ -105,46 +107,57 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
     var mediaHtml = '';
     if (q.image_url && q.media_position === 'top') {
-      mediaHtml = '<img src="' + q.image_url + '" style="width:100%;border-radius:8px;margin-bottom:12px" />';
+      mediaHtml = '<img src="' + q.image_url + '" style="width:100%;border-radius:12px;margin-bottom:20px;display:block" />';
     }
 
     var optionsHtml = (q.options || []).map(function(opt, i) {
-      return '<button class="hbq-opt" data-idx="' + i + '" data-points="' + opt.points + '" style="display:block;width:100%;text-align:left;padding:12px 16px;margin-bottom:8px;border:2px solid #e2e8f0;border-radius:8px;background:#fff;cursor:pointer;font-size:0.95em;transition:border-color 0.15s">' +
-        '<strong>' + opt.letter + '.</strong> ' + opt.label +
+      return '<button class="hbq-opt" data-idx="' + i + '" data-points="' + opt.points + '" style="display:flex;align-items:center;width:100%;text-align:left;padding:16px 20px;margin-bottom:12px;border:2px solid #e2e8f0;border-radius:12px;background:#fff;cursor:pointer;font-size:1em;transition:all 0.2s;color:#2d3748">' +
+        '<span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:#f7fafc;border-radius:6px;margin-right:12px;font-weight:700;font-size:0.9em;color:#718096;border:1px solid #edf2f7">' + opt.letter + '</span>' +
+        '<span>' + opt.label + '</span>' +
         '</button>';
     }).join('');
 
     if (q.image_url && q.media_position === 'bottom') {
-      mediaHtml = '<img src="' + q.image_url + '" style="width:100%;border-radius:8px;margin-top:12px" />';
+      mediaHtml = '<img src="' + q.image_url + '" style="width:100%;border-radius:12px;margin-top:20px;display:block" />';
     }
 
+    // Progress bar no topo, fora do container de conteúdo principal
+    var progressBarHtml = '<div style="width:100%;background:#f1f5f9;height:8px;position:relative;overflow:hidden;border-radius:0 0 8px 8px">' +
+      '<div style="position:absolute;top:0;left:0;height:100%;background:#426a35;width:' + progress + '%;transition:width 0.4s cubic-bezier(0.4, 0, 0.2, 1)"></div>' +
+      '</div>';
+
     render(
-      '<div style="padding:24px">' +
-      '<div style="background:#e2e8f0;border-radius:99px;height:6px;margin-bottom:20px"><div style="background:#2563eb;height:6px;border-radius:99px;width:' + progress + '%"></div></div>' +
-      '<p style="font-size:0.85em;color:#888;margin-bottom:8px">' + (state.currentQuestion + 1) + ' / ' + state.totalQuestions + '</p>' +
-      (q.icon ? '<span style="font-size:2em;display:block;margin-bottom:8px">' + q.icon + '</span>' : '') +
+      progressBarHtml +
+      '<div style="padding:32px">' +
+      '<p style="font-size:0.85em;font-weight:700;color:#a0aec0;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">' + (state.currentQuestion + 1) + ' de ' + state.totalQuestions + '</p>' +
+      (q.icon ? '<span style="font-size:2.5em;display:block;margin-bottom:12px">' + q.icon + '</span>' : '') +
       (q.media_position === 'top' ? mediaHtml : '') +
-      '<h3 style="font-size:1.1em;font-weight:600;margin-bottom:16px">' + q.question + '</h3>' +
+      '<h3 style="font-size:1.3em;font-weight:700;margin-bottom:24px;color:#1a202c;line-height:1.4">' + q.question + '</h3>' +
       (q.media_position !== 'top' ? mediaHtml : '') +
       optionsHtml +
       '</div>'
     );
 
     container.querySelectorAll('.hbq-opt').forEach(function(btn) {
-      btn.onmouseover = function() { this.style.borderColor = '#2563eb'; };
-      btn.onmouseout = function() { this.style.borderColor = '#e2e8f0'; };
+      btn.onmouseover = function() { 
+        this.style.borderColor = '#426a35'; 
+        this.style.background = '#f1f7ee';
+        this.querySelector('span').style.background = '#426a35';
+        this.querySelector('span').style.color = '#fff';
+      };
+      btn.onmouseout = function() { 
+        this.style.borderColor = '#e2e8f0'; 
+        this.style.background = '#fff';
+        this.querySelector('span').style.background = '#f7fafc';
+        this.querySelector('span').style.color = '#718096';
+      };
       btn.onclick = function() {
         var points = parseInt(this.getAttribute('data-points') || '0', 10);
         state.score += points;
         state.answers.push({ question_id: q.id, field_id: q.field_id, points: points });
         savePartial();
-        if (q.is_informational) {
-          state.currentQuestion++;
-          renderQuestion();
-        } else {
-          state.currentQuestion++;
-          renderQuestion();
-        }
+        state.currentQuestion++;
+        renderQuestion();
       };
     });
   }

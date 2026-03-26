@@ -35,14 +35,14 @@ export function TiptapEditor({ value, onChange, placeholder }: TiptapEditorProps
     <button
       type="button"
       onMouseDown={(e) => { e.preventDefault(); action() }}
-      className={`rounded px-2 py-1 text-xs font-medium transition-colors ${active ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-100'}`}
+      className={`rounded px-2 py-1 text-xs font-medium transition-colors ${active ? 'bg-primary-100 text-primary-700' : 'text-gray-600 hover:bg-gray-100'}`}
     >
       {label}
     </button>
   )
 
   return (
-    <div className="rounded-lg border border-gray-300 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500">
+    <div className="rounded-lg border border-gray-300 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary">
       <div className="flex gap-1 border-b border-gray-200 px-2 py-1">
         {btn(() => editor.chain().focus().toggleBold().run(), 'B', editor.isActive('bold'))}
         {btn(() => editor.chain().focus().toggleItalic().run(), 'I', editor.isActive('italic'))}

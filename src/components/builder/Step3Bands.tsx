@@ -15,6 +15,11 @@ const BANDS: { key: string; label: string; min: number; max: number; color: stri
   { key: 'avancada', label: '🔴 Avanzada a crítica', min: 20, max: 24, color: '#EF4444' },
 ]
 
+const CHALET_GREEN_PRESETS = [
+  '#f1f7ee', '#e0edda', '#c4ddb9', '#9fc78f', '#7eb06b',
+  '#60954d', '#426a35', '#3a5b30', '#314a2a', '#2c4027', '#142211'
+]
+
 function BadgePreview({ label, color, textColor }: { label: string; color: string; textColor: string }) {
   return (
     <div className="flex flex-col gap-2 rounded-lg bg-gray-50 p-4 border border-gray-100">
@@ -85,8 +90,18 @@ export function Step3Bands({ settings, onChange }: Props) {
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <ColorPicker label="Cor de fundo" value={band.color ?? '#3B82F6'} onChange={(v) => set('color')(v)} />
-              <ColorPicker label="Cor do texto (badge)" value={band.badge_text_color ?? '#ffffff'} onChange={(v) => set('badge_text_color')(v)} />
+              <ColorPicker
+                label="Cor de fundo"
+                value={band.color ?? defaultColor}
+                onChange={(v) => set('color')(v)}
+                presets={CHALET_GREEN_PRESETS}
+              />
+              <ColorPicker
+                label="Cor do texto (badge)"
+                value={band.badge_text_color ?? '#ffffff'}
+                onChange={(v) => set('badge_text_color')(v)}
+                presets={['#ffffff', '#000000', ...CHALET_GREEN_PRESETS]}
+              />
             </div>
             <div>
               <label className="text-xs font-medium text-gray-600">Descrição</label>

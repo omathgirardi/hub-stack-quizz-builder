@@ -32,6 +32,16 @@ export const responses = pgTable('responses', {
   createdAtIdx: index('idx_responses_created_at').on(t.createdAt),
 }))
 
+export const gallery = pgTable('gallery', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: text('user_id').notNull(),
+  url: text('url').notNull(),
+  name: text('name'),
+  createdAt: timestamp('created_at').defaultNow(),
+}, (t) => ({
+  userIdIdx: index('idx_gallery_user_id').on(t.userId),
+}))
+
 export type Quiz = typeof quizzes.$inferSelect
 export type NewQuiz = typeof quizzes.$inferInsert
 export type Response = typeof responses.$inferSelect
