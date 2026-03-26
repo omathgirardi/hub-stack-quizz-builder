@@ -2,6 +2,8 @@ import { NextRequest } from 'next/server'
 import { getQuizById } from '@/lib/db/queries/quizzes'
 import { corsHeaders } from '@/lib/cors'
 
+export const runtime = 'edge'
+
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const quiz = await getQuizById(id)
