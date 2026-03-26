@@ -49,7 +49,7 @@ export function BuilderLayout({ quiz, onSave }: Props) {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Título do quiz"
-            className="w-72 rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-72 rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
           />
         </div>
         <div className="flex items-center gap-3">

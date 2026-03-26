@@ -99,7 +99,7 @@ function QuestionCard({ question, index, total, onChange, onRemove }: {
                 />
                 <input
                   type="number"
-                  className="w-20 rounded-lg border border-gray-300 px-2 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                  className="w-20 rounded-lg border border-gray-300 px-2 py-2 text-sm focus:border-primary focus:outline-none"
                   placeholder="pts"
                   value={opt.points}
                   onChange={(e) => {

@@ -24,10 +24,10 @@ export function BuilderSidebar({ activeStep, onChange }: Props) {
             type="button"
             onClick={() => onChange(n)}
             className={`flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-              activeStep === n ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-100'
+              activeStep === n ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-100'
             }`}
           >
-            <span className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${activeStep === n ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'}`}>
+            <span className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${activeStep === n ? 'bg-primary text-white' : 'bg-gray-200 text-gray-600'}`}>
               {n}
             </span>
             {label}
