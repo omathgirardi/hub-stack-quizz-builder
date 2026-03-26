@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation'
 import { Card } from '@/components/ui/Card'
 import { getDashboardStats } from '@/lib/db/queries/responses'
 
+export const runtime = 'edge'
+
 export default async function DashboardPage() {
   const { userId } = await auth()
   if (!userId) redirect('/sign-in')

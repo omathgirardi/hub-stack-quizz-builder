@@ -7,7 +7,9 @@ import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { QuizzesActions } from './QuizzesActions'
 
-export default async function QuizzesPage() {
+export const runtime = 'edge'
+
+export async function QuizzesPage() {
   const { userId } = await auth()
   if (!userId) redirect('/sign-in')
 

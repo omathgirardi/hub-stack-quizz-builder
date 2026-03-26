@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
 import { ResponsesClient } from './ResponsesClient'
 
+export const runtime = 'edge'
+
 interface SearchParams {
   quizId?: string
   resultBand?: string

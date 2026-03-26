@@ -2,6 +2,8 @@ import { NextRequest } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { getAllResponses } from '@/lib/db/queries/responses'
 
+export const runtime = 'edge'
+
 export async function GET(req: NextRequest) {
   const { userId } = await auth()
   if (!userId) return Response.json({ error: 'Unauthorized' }, { status: 401 })

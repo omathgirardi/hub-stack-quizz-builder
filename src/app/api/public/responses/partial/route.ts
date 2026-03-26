@@ -2,6 +2,8 @@ import { NextRequest } from 'next/server'
 import { insertResponse, updateResponse } from '@/lib/db/queries/responses'
 import { corsResponse, corsOptionsResponse } from '@/lib/cors'
 
+export const runtime = 'edge'
+
 export async function OPTIONS() {
   return corsOptionsResponse()
 }

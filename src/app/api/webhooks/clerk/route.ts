@@ -1,5 +1,7 @@
 import { NextRequest } from 'next/server'
 
+export const runtime = 'edge'
+
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null)
   // Sincronização de usuários Clerk — expandir conforme necessidade

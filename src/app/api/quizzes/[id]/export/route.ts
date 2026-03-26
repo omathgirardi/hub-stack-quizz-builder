@@ -2,6 +2,8 @@ import { NextRequest } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { getQuizById } from '@/lib/db/queries/quizzes'
 
+export const runtime = 'edge'
+
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const { userId } = await auth()
