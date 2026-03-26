@@ -2,22 +2,25 @@
 import { ButtonHTMLAttributes, forwardRef } from 'react'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'danger' | 'ghost'
-  size?: 'sm' | 'md' | 'lg'
+  variant?: 'primary' | 'secondary' | 'danger' | 'ghost' | 'outline' | 'link'
+  size?: 'sm' | 'md' | 'lg' | 'icon'
   loading?: boolean
 }
 
 const variants = {
-  primary: 'bg-blue-600 text-white hover:bg-blue-700 disabled:bg-blue-300',
-  secondary: 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50',
-  danger: 'bg-red-600 text-white hover:bg-red-700',
-  ghost: 'text-gray-600 hover:bg-gray-100',
+  primary: 'bg-primary text-primary-foreground hover:bg-primary-700 disabled:bg-primary-300',
+  secondary: 'bg-primary-100 text-primary-800 hover:bg-primary-200',
+  danger: 'bg-destructive text-destructive-foreground hover:bg-destructive-600',
+  outline: 'bg-transparent border border-primary text-primary hover:bg-primary-50',
+  ghost: 'text-primary-600 hover:bg-primary-50',
+  link: 'text-primary underline-offset-4 hover:underline',
 }
 
 const sizes = {
-  sm: 'px-3 py-1.5 text-sm',
-  md: 'px-4 py-2 text-sm',
-  lg: 'px-5 py-2.5 text-base',
+  sm: 'px-3 py-1.5 text-label',
+  md: 'px-4 py-2 text-label',
+  lg: 'px-5 py-2.5 text-body font-bold',
+  icon: 'h-10 w-10',
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -25,7 +28,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     <button
       ref={ref}
       disabled={disabled || loading}
-      className={`inline-flex items-center gap-2 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed ${variants[variant]} ${sizes[size]} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:cursor-not-allowed ${variants[variant]} ${sizes[size]} ${className}`}
       {...props}
     >
       {loading && (

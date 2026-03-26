@@ -1,14 +1,72 @@
 @import "tailwindcss";
+@import url("https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap");
+
+@theme {
+  /* Chalet Green Palette */
+  --color-chalet-green-50: #f1f7ee;
+  --color-chalet-green-100: #e0edda;
+  --color-chalet-green-200: #c4ddb9;
+  --color-chalet-green-300: #9fc78f;
+  --color-chalet-green-400: #7eb06b;
+  --color-chalet-green-500: #60954d;
+  --color-chalet-green-600: #426a35;
+  --color-chalet-green-700: #3a5b30;
+  --color-chalet-green-800: #314a2a;
+  --color-chalet-green-900: #2c4027;
+  --color-chalet-green-950: #142211;
+
+  /* Primary color mapped to Chalet Green 600 */
+  --color-primary: var(--color-chalet-green-600);
+  --color-primary-foreground: #ffffff;
+  
+  --color-primary-50: var(--color-chalet-green-50);
+  --color-primary-100: var(--color-chalet-green-100);
+  --color-primary-200: var(--color-chalet-green-200);
+  --color-primary-300: var(--color-chalet-green-300);
+  --color-primary-400: var(--color-chalet-green-400);
+  --color-primary-500: var(--color-chalet-green-500);
+  --color-primary-600: var(--color-chalet-green-600);
+  --color-primary-700: var(--color-chalet-green-700);
+  --color-primary-800: var(--color-chalet-green-800);
+  --color-primary-900: var(--color-chalet-green-900);
+  --color-primary-950: var(--color-chalet-green-950);
+
+  /* Destructive color (Red scale) */
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #ffffff;
+  --color-destructive-50: #fef2f2;
+  --color-destructive-100: #fee2e2;
+  --color-destructive-200: #fecaca;
+  --color-destructive-300: #fca5a5;
+  --color-destructive-400: #f87171;
+  --color-destructive-500: #ef4444;
+  --color-destructive-600: #dc2626;
+  --color-destructive-700: #b91c1c;
+  --color-destructive-800: #991b1b;
+  --color-destructive-900: #7f1d1d;
+  --color-destructive-950: #450a0a;
+
+  /* Typography Scale */
+  --font-sans: "Google Sans", system-ui, -apple-system, sans-serif;
+  
+  --text-display: 3.5625rem; /* 57px */
+  --text-headline: 2rem; /* 32px */
+  --text-title: 1.375rem; /* 22px */
+  --text-body: 1rem; /* 16px */
+  --text-label: 0.875rem; /* 14px */
+}
 
 :root {
   --background: #f9fafb;
   --foreground: #111827;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: system-ui, -apple-system, sans-serif;
+@layer base {
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+  }
 }
 
 * {

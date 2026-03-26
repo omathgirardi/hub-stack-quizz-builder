@@ -22,7 +22,7 @@ export function ColorPicker({ value, onChange, label }: ColorPickerProps) {
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder="#3B82F6"
-          className="w-28 rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-mono focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="w-28 rounded-lg border border-gray-300 px-3 py-1.5 text-label font-mono focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
         />
       </div>
     </div>

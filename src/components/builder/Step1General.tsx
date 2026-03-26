@@ -17,7 +17,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   )
 }
 
-const inp = 'rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
+const inp = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-label focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary'
 
 export function Step1General({ settings, onChange }: Props) {
   const set = (key: keyof QuizSettings) => (val: string) => onChange({ ...settings, [key]: val })

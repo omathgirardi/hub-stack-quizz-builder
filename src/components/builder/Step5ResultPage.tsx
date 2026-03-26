@@ -7,7 +7,7 @@ interface Props {
   onChange: (s: QuizSettings) => void
 }
 
-const inp = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
+const inp = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-label focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary'
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -21,7 +21,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="space-y-4 rounded-xl border border-gray-200 p-4">
-      <h3 className="font-semibold text-gray-700">{title}</h3>
+      <h3 className="text-title font-bold text-gray-700">{title}</h3>
       {children}
     </section>
   )
@@ -68,7 +68,7 @@ export function Step5ResultPage({ settings, onChange }: Props) {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-base font-semibold text-gray-800">5. Página de Resultado</h2>
+      <h2 className="text-headline font-bold text-gray-800">5. Página de Resultado</h2>
 
       <Field label="Tipo da página">
         <select className={inp} value={(rp.type as string) ?? 'standard'} onChange={(e) => setRp('type')(e.target.value)}>

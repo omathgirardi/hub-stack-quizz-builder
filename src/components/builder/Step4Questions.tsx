@@ -21,7 +21,7 @@ interface Props {
 
 const LETTERS = ['A', 'B', 'C', 'D']
 const POINTS = { A: 4, B: 3, C: 2, D: 1 }
-const inp = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
+const inp = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-label focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary'
 
 function newQuestion(): Question {
   return {

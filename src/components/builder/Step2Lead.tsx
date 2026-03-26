@@ -7,7 +7,7 @@ interface Props {
   onChange: (s: QuizSettings) => void
 }
 
-const inp = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
+const inp = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-label focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary'
 
 export function Step2Lead({ settings, onChange }: Props) {
   const set = (key: keyof QuizSettings) => (val: unknown) => onChange({ ...settings, [key]: val })
