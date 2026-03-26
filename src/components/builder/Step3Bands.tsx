@@ -8,12 +8,28 @@ interface Props {
   onChange: (s: QuizSettings) => void
 }
 
-const BANDS: { key: string; label: string }[] = [
-  { key: 'leve', label: '🟢 Leve' },
-  { key: 'moderada', label: '🟡 Moderada' },
-  { key: 'moderada_avancada', label: '🟠 Moderada Avançada' },
-  { key: 'avancada', label: '🔴 Avançada' },
+const BANDS: { key: string; label: string; min: number; max: number; color: string }[] = [
+  { key: 'leve', label: '🟢 Leve a moderada', min: 6, max: 10, color: '#426A35' },
+  { key: 'moderada', label: '🟡 Moderada', min: 11, max: 14, color: '#FBBF24' },
+  { key: 'moderada_avancada', label: '🟠 Moderada a avanzada', min: 15, max: 19, color: '#F59E0B' },
+  { key: 'avancada', label: '🔴 Avanzada a crítica', min: 20, max: 24, color: '#EF4444' },
 ]
+
+function BadgePreview({ label, color, textColor }: { label: string; color: string; textColor: string }) {
+  return (
+    <div className="flex flex-col gap-2 rounded-lg bg-gray-50 p-4 border border-gray-100">
+      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Preview do Badge</span>
+      <div className="flex justify-center">
+        <div
+          style={{ backgroundColor: color, color: textColor }}
+          className="inline-block rounded-full px-6 py-2 text-sm font-bold uppercase tracking-wide shadow-sm"
+        >
+          {label || 'Sua Faixa Aqui'}
+        </div>
+      </div>
+    </div>
+  )
+}
 
 const inp = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
 
@@ -31,12 +47,25 @@ export function Step3Bands({ settings, onChange }: Props) {
   return (
     <div className="space-y-6">
       <h2 className="text-base font-semibold text-gray-800">3. Faixas de Resultado</h2>
-      {BANDS.map(({ key, label }) => {
-        const band = (results[key as keyof typeof results] ?? {}) as BandSettings
+      {BANDS.map(({ key, label: defaultLabel, min, max, color: defaultColor }) => {
+        const band = (results[key as keyof typeof results] ?? {
+          label: defaultLabel.split(' ').slice(1).join(' '),
+          range_min: min,
+          range_max: max,
+          color: defaultColor,
+          badge_text_color: '#ffffff'
+        }) as BandSettings
         const set = (field: keyof BandSettings) => (val: unknown) => setBand(key, { [field]: val } as Partial<BandSettings>)
         return (
           <div key={key} className="rounded-xl border border-gray-200 p-5 space-y-4">
-            <h3 className="font-semibold text-gray-800">{label}</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-gray-800">{defaultLabel}</h3>
+              <BadgePreview
+                label={band.label ?? ''}
+                color={band.color ?? defaultColor}
+                textColor={band.badge_text_color ?? '#ffffff'}
+              />
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-xs font-medium text-gray-600">Label da faixa</label>

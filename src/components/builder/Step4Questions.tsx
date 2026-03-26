@@ -20,13 +20,18 @@ interface Props {
 }
 
 const LETTERS = ['A', 'B', 'C', 'D']
+const POINTS = { A: 4, B: 3, C: 2, D: 1 }
 const inp = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
 
 function newQuestion(): Question {
   return {
     id: uuid(), field_id: uuid(), question: '', icon: '', image_url: '', use_carousel: false,
     carousel_images: [], is_informational: false, media_position: 'top',
-    options: LETTERS.map((letter) => ({ label: '', points: 0, letter })),
+    options: LETTERS.map((letter) => ({
+      label: '',
+      points: POINTS[letter as keyof typeof POINTS] || 0,
+      letter
+    })),
   }
 }
 

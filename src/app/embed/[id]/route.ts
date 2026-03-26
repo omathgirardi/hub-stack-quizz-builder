@@ -219,16 +219,16 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
     var copyBands = {
       es: {
-        leve: { headline: 'Tu cuerpo presenta señales iniciales de inflamación', description: 'Este es el momento ideal para actuar e prevenir el avance.' },
-        moderada: { headline: 'Tu cuerpo presenta inflamación moderada', description: 'Los síntomas ya afectan tu qualidade de vida.' },
-        moderada_avancada: { headline: 'Tu cuerpo presenta señales de inflamación moderada a avanzada', description: 'Es crucial actuar ahora para evitar daños irreversíveis.' },
-        avancada: { headline: 'Tu cuerpo apresenta señales de inflamación avanzada', description: 'Atención urgente: tu cuerpo necesita un protocolo específico ahora.' }
+        leve: { headline: 'Tu cuerpo presenta señales de inflamación leve a moderada', description: 'Este es el momento ideal para actuar y prevenir el avance.' },
+        moderada: { headline: 'Tu cuerpo presenta inflamación moderada', description: 'Los síntomas ya afectan tu calidad de vida.' },
+        moderada_avancada: { headline: 'Tu cuerpo presenta señales de inflamación moderada a avanzada', description: 'Es crucial actuar ahora para evitar daños irreversibles.' },
+        avancada: { headline: 'Tu cuerpo presenta señales de inflamación avanzada a crítica', description: 'Atención urgente: tu cuerpo necesita un protocolo específico ahora.' }
       },
       pt: {
-        leve: { headline: 'Seu corpo apresenta sinais iniciais de inflamação', description: 'Este é o momento ideal para agir e prevenir o avanço.' },
+        leve: { headline: 'Seu corpo apresenta sinais de inflamação leve a moderada', description: 'Este é o momento ideal para agir e prevenir o avanço.' },
         moderada: { headline: 'Seu corpo apresenta inflamação moderada', description: 'Os sintomas já afetam sua qualidade de vida.' },
         moderada_avancada: { headline: 'Seu corpo apresenta sinais de inflamação moderada a avançada', description: 'É crucial agir agora para evitar danos irreversíveis.' },
-        avancada: { headline: 'Seu corpo apresenta sinais de inflamação avançada', description: 'Atenção urgente: seu corpo precisa de um protocolo específico agora.' }
+        avancada: { headline: 'Seu corpo apresenta sinais de inflamação avançada a crítica', description: 'Atenção urgente: seu corpo precisa de um protocolo específico agora.' }
       }
     };
     var copy = (copyBands[lang] || copyBands.es)[band] || copyBands.es.leve;
