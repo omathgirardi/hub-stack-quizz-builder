@@ -21,7 +21,6 @@ export default async function EditQuizPage({ params }: { params: Promise<{ id: s
       questions: questions as never,
       settings: settings as never,
     })
-    redirect('/quizzes')
   }
 
   return (

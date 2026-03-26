@@ -16,7 +16,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
   const script = `
 (function() {
-  var QUIZ_DATA = ${JSON.stringify(quiz)};
+  var QUIZ_DATA = ${JSON.stringify(quiz).replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\${/g, '\\${')};
   var QUIZ_ID = "${quiz.id}";
   var API_BASE = '${appUrl}';
 
@@ -71,17 +71,22 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       '<h2 style="font-size:1.6em;font-weight:700;margin-bottom:12px;color:#1a202c">' + (s.headline || state.quiz.title) + '</h2>' +
       '<div style="color:#4a5568;margin-bottom:24px;line-height:1.6">' + (s.subheadline || '') + '</div>' +
       (s.urgency_text ? '<p style="color:#dc2626;font-size:0.95em;font-weight:600;margin-bottom:20px;background:#fef2f2;padding:10px;border-radius:8px">' + s.urgency_text + '</p>' : '') +
-      '<button id="hbq-start" style="background:#426a35;color:#fff;border:none;padding:16px 48px;border-radius:12px;font-size:1.1em;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(66,106,53,0.3);transition:transform 0.2s" onmouseover="this.style.transform=\'scale(1.02)\'" onmouseout="this.style.transform=\'scale(1)\'">' + (s.cta_button || 'Iniciar Quiz') + '</button>' +
+      '<button id="hbq-start" style="background:#426a35;color:#fff;border:none;padding:16px 48px;border-radius:12px;font-size:1.1em;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(66,106,53,0.3);transition:transform 0.2s">' + (s.cta_button || 'Iniciar Quiz') + '</button>' +
       '</div>'
     );
-    document.getElementById('hbq-start').onclick = function() {
-      if (state.quiz.settings.name_capture || state.quiz.settings.email_capture || state.quiz.settings.whatsapp_capture) {
-        renderLead();
-      } else {
-        state.currentQuestion = 0;
-        renderQuestion();
-      }
-    };
+    var startBtn = document.getElementById('hbq-start');
+    if (startBtn) {
+      startBtn.onmouseover = function() { this.style.transform = 'scale(1.02)'; };
+      startBtn.onmouseout = function() { this.style.transform = 'scale(1)'; };
+      startBtn.onclick = function() {
+        if (state.quiz.settings.name_capture || state.quiz.settings.email_capture || state.quiz.settings.whatsapp_capture) {
+          renderLead();
+        } else {
+          state.currentQuestion = 0;
+          renderQuestion();
+        }
+      };
+    }
   }
 
   function renderLead() {
@@ -89,9 +94,9 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     var fields = '';
     var inputStyle = 'width:100%;padding:14px;margin-bottom:12px;border:1px solid #e2e8f0;border-radius:10px;box-sizing:border-box;font-size:1em;outline:none;transition:border-color 0.2s';
     
-    if (s.name_capture) fields += '<div style="margin-bottom:4px;text-align:left;font-size:0.9em;font-weight:600;color:#4a5568">' + (s.name_label || 'Nombre') + '</div><input id="hbq-name" type="text" placeholder="' + (s.name_placeholder || 'Tu nombre') + '" style="' + inputStyle + '" onfocus="this.style.borderColor=\'#426a35\'" onblur="this.style.borderColor=\'#e2e8f0\'" />';
-    if (s.email_capture) fields += '<div style="margin-bottom:4px;text-align:left;font-size:0.9em;font-weight:600;color:#4a5568">' + (s.email_label || 'E-mail') + '</div><input id="hbq-email" type="email" placeholder="' + (s.email_placeholder || 'tu@email.com') + '" style="' + inputStyle + '" onfocus="this.style.borderColor=\'#426a35\'" onblur="this.style.borderColor=\'#e2e8f0\'" />';
-    if (s.whatsapp_capture) fields += '<div style="margin-bottom:4px;text-align:left;font-size:0.9em;font-weight:600;color:#4a5568">' + (s.whatsapp_label || 'WhatsApp') + '</div><input id="hbq-whatsapp" type="tel" placeholder="' + (s.whatsapp_placeholder || '+54...') + '" style="' + inputStyle + '" onfocus="this.style.borderColor=\'#426a35\'" onblur="this.style.borderColor=\'#e2e8f0\'" />';
+    if (s.name_capture) fields += '<div style="margin-bottom:4px;text-align:left;font-size:0.9em;font-weight:600;color:#4a5568">' + (s.name_label || 'Nombre') + '</div><input id="hbq-name" class="hbq-input" type="text" placeholder="' + (s.name_placeholder || 'Tu nombre') + '" style="' + inputStyle + '" />';
+    if (s.email_capture) fields += '<div style="margin-bottom:4px;text-align:left;font-size:0.9em;font-weight:600;color:#4a5568">' + (s.email_label || 'E-mail') + '</div><input id="hbq-email" class="hbq-input" type="email" placeholder="' + (s.email_placeholder || 'tu@email.com') + '" style="' + inputStyle + '" />';
+    if (s.whatsapp_capture) fields += '<div style="margin-bottom:4px;text-align:left;font-size:0.9em;font-weight:600;color:#4a5568">' + (s.whatsapp_label || 'WhatsApp') + '</div><input id="hbq-whatsapp" class="hbq-input" type="tel" placeholder="' + (s.whatsapp_placeholder || '+54...') + '" style="' + inputStyle + '" />';
 
     render(
       '<div style="padding:32px;text-align:center">' +
@@ -100,16 +105,25 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       '<button id="hbq-lead-next" style="background:#426a35;color:#fff;border:none;padding:16px;border-radius:12px;font-size:1.1em;font-weight:700;cursor:pointer;width:100%;margin-top:8px;box-shadow:0 4px 12px rgba(66,106,53,0.3)">Continuar</button>' +
       '</div>'
     );
-    document.getElementById('hbq-lead-next').onclick = function() {
-      var nameEl = document.getElementById('hbq-name');
-      var emailEl = document.getElementById('hbq-email');
-      var waEl = document.getElementById('hbq-whatsapp');
-      state.leadName = nameEl ? nameEl.value : '';
-      state.leadEmail = emailEl ? emailEl.value : '';
-      state.whatsapp = waEl ? waEl.value : '';
-      state.currentQuestion = 0;
-      renderQuestion();
-    };
+
+    container.querySelectorAll('.hbq-input').forEach(function(inp) {
+      inp.onfocus = function() { this.style.borderColor = '#426a35'; };
+      inp.onblur = function() { this.style.borderColor = '#e2e8f0'; };
+    });
+
+    var nextBtn = document.getElementById('hbq-lead-next');
+    if (nextBtn) {
+      nextBtn.onclick = function() {
+        var nameEl = document.getElementById('hbq-name');
+        var emailEl = document.getElementById('hbq-email');
+        var waEl = document.getElementById('hbq-whatsapp');
+        state.leadName = nameEl ? nameEl.value : '';
+        state.leadEmail = emailEl ? emailEl.value : '';
+        state.whatsapp = waEl ? waEl.value : '';
+        state.currentQuestion = 0;
+        renderQuestion();
+      };
+    }
   }
 
   function renderQuestion() {
@@ -289,7 +303,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     ];
 
     var ctaUrl = result.offer_url || s.cta_offer_url || '#';
-    var html = '<div style="font-family:system-ui,sans-serif;max-width:600px;margin:0 auto">';
+    var html = '<div style="font-family:system-ui,sans-serif;max-width:708px;margin:0 auto">';
 
     // 1. Imagem da faixa (vem do Step3 Bands — result.image_url)
     if (result.image_url) {
