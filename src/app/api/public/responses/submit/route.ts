@@ -5,7 +5,6 @@ import { corsResponse, corsOptionsResponse } from '@/lib/cors'
 import { rateLimitByIp } from '@/lib/rate-limit'
 import type { BandSettings } from '@/lib/sanitize'
 
-export const runtime = 'edge'
 
 export async function OPTIONS() {
   return corsOptionsResponse()

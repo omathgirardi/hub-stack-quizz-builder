@@ -3,7 +3,6 @@ import { redirect, notFound } from 'next/navigation'
 import { getQuizById, updateQuiz } from '@/lib/db/queries/quizzes'
 import { BuilderLayout } from '@/components/builder/BuilderLayout'
 
-export const runtime = 'edge'
 
 export default async function EditQuizPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params

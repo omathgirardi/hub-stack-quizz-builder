@@ -3,7 +3,6 @@ import { redirect } from 'next/navigation'
 import { createQuiz } from '@/lib/db/queries/quizzes'
 import { BuilderLayout } from '@/components/builder/BuilderLayout'
 
-export const runtime = 'edge'
 
 export default async function NewQuizPage() {
   const { userId } = await auth()

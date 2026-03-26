@@ -2,7 +2,6 @@ import { NextRequest } from 'next/server'
 import { getQuizById } from '@/lib/db/queries/quizzes'
 import { corsResponse, corsOptionsResponse } from '@/lib/cors'
 
-export const runtime = 'edge'
 
 export async function OPTIONS() {
   return corsOptionsResponse()

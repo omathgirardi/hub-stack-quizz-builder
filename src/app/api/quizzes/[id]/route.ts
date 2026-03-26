@@ -2,7 +2,6 @@ import { NextRequest } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { deleteQuiz } from '@/lib/db/queries/quizzes'
 
-export const runtime = 'edge'
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
