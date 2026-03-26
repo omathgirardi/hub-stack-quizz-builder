@@ -8,7 +8,20 @@ export default async function GalleryPage() {
   const { userId } = await auth()
   if (!userId) redirect('/sign-in')
 
-  const items = await getGalleryByUser(userId)
+  let items = []
+  try {
+    items = await getGalleryByUser(userId)
+  } catch (error) {
+    console.error('Erro ao buscar galeria:', error)
+    return (
+      <div className="p-8">
+        <Card className="py-16 text-center border-red-200 bg-red-50">
+          <p className="text-red-600 font-medium">Erro ao carregar galeria.</p>
+          <p className="text-sm text-red-500 mt-1">Por favor, tente novamente em instantes.</p>
+        </Card>
+      </div>
+    )
+  }
 
   return (
     <div className="p-8">

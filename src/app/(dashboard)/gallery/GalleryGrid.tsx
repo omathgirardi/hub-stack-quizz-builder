@@ -9,7 +9,7 @@ interface GalleryItem {
   name?: string | null
 }
 
-export function GalleryGrid({ initialItems }: { initialItems: any[] }) {
+export function GalleryGrid({ initialItems }: { initialItems: GalleryItem[] }) {
   const [items, setItems] = useState<GalleryItem[]>(initialItems)
 
   const handleDelete = async (id: string) => {
