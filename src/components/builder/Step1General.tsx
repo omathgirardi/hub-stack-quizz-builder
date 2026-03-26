@@ -1,6 +1,7 @@
 'use client'
 import { TiptapEditor } from './TiptapEditor'
 import { ImageUploader } from './ImageUploader'
+import { Toggle } from '@/components/ui/Toggle'
 import type { QuizSettings } from '@/lib/sanitize'
 
 interface Props {
@@ -25,6 +26,13 @@ export function Step1General({ settings, onChange }: Props) {
   return (
     <div className="space-y-6">
       <h2 className="text-base font-semibold text-gray-800">1. Configurações Gerais</h2>
+
+      <Field label="Exibir Capa (Landing Page)">
+        <Toggle
+          checked={Boolean(settings.show_landing)}
+          onChange={(v) => onChange({ ...settings, show_landing: v })}
+        />
+      </Field>
 
       <Field label="Headline (rich text)">
         <TiptapEditor value={settings.headline ?? ''} onChange={set('headline')} placeholder="Ex: Descubra seu nível..." />

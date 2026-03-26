@@ -35,10 +35,15 @@ export function BuilderLayout({ quiz, onSave }: Props) {
 
   function handleSave() {
     startTransition(async () => {
-      await onSave(title, questions, settings)
-      setSaved(true)
-      setShowCopyModal(true)
-      setTimeout(() => setSaved(false), 3000)
+      try {
+        await onSave(title, questions, settings)
+        setSaved(true)
+        setShowCopyModal(true)
+        setTimeout(() => setSaved(false), 3000)
+      } catch (error) {
+        console.error('Erro ao salvar quiz:', error)
+        alert('Erro ao salvar quiz. Certifique-se de que as imagens não sejam excessivamente grandes.')
+      }
     })
   }
 

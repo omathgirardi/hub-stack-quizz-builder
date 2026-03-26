@@ -43,6 +43,7 @@ export interface QuizSettings {
   cta_offer_url?: string
   webhook_url?: string
   language?: 'pt' | 'es'
+  show_landing?: boolean
   whatsapp_capture?: boolean
   name_capture?: boolean
   email_capture?: boolean

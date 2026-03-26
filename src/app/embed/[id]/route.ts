@@ -66,9 +66,9 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     var s = state.quiz.settings || {};
     render(
       '<div style="text-align:center;padding:24px;background:#fff;border-radius:12px;box-shadow:none;border:none">' +
-      (s.landing_image ? '<img src="' + s.landing_image + '" style="width:100%;max-width:708px;height:320px;object-fit:cover;border-radius:12px;margin:0 auto 20px;display:block" />' : '') +
-      '<h2 style="font-size:1.6em;font-weight:700;margin-bottom:12px;color:#1a202c">' + (s.headline || state.quiz.title) + '</h2>' +
-      '<div style="color:#4a5568;margin-bottom:24px;line-height:1.6">' + (s.subheadline || '') + '</div>' +
+      (s.landing_image ? '<img src="' + s.landing_image + '" style="width:100%;max-width:708px;height:auto;max-height:400px;object-fit:cover;border-radius:12px;margin:0 auto 20px;display:block" />' : '') +
+      (s.headline ? '<div style="font-size:1.6em;font-weight:700;margin-bottom:12px;color:#1a202c">' + s.headline + '</div>' : '<h2 style="font-size:1.6em;font-weight:700;margin-bottom:12px;color:#1a202c">' + state.quiz.title + '</h2>') +
+      (s.subheadline ? '<div style="color:#4a5568;margin-bottom:24px;line-height:1.6">' + s.subheadline + '</div>' : '') +
       (s.urgency_text ? '<p style="color:#dc2626;font-size:0.95em;font-weight:600;margin-bottom:20px;background:#fef2f2;padding:10px;border-radius:8px">' + s.urgency_text + '</p>' : '') +
       '<button id="hbq-start" style="background:#426a35;color:#fff;border:none;padding:16px 48px;border-radius:12px;font-size:1.1em;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(66,106,53,0.3);transition:transform 0.2s">' + (s.cta_button || 'Iniciar Quiz') + '</button>' +
       '</div>'
@@ -93,14 +93,15 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     var fields = '';
     var inputStyle = 'width:100%;padding:14px;margin-bottom:12px;border:1px solid #e2e8f0;border-radius:10px;box-sizing:border-box;font-size:1em;outline:none;transition:border-color 0.2s';
     
-    if (s.name_capture) fields += '<div style="margin-bottom:4px;text-align:left;font-size:0.9em;font-weight:600;color:#4a5568">' + (s.name_label || 'Nombre') + '</div><input id="hbq-name" class="hbq-input" type="text" placeholder="' + (s.name_placeholder || 'Tu nombre') + '" style="' + inputStyle + '" />';
-    if (s.email_capture) fields += '<div style="margin-bottom:4px;text-align:left;font-size:0.9em;font-weight:600;color:#4a5568">' + (s.email_label || 'E-mail') + '</div><input id="hbq-email" class="hbq-input" type="email" placeholder="' + (s.email_placeholder || 'tu@email.com') + '" style="' + inputStyle + '" />';
-    if (s.whatsapp_capture) fields += '<div style="margin-bottom:4px;text-align:left;font-size:0.9em;font-weight:600;color:#4a5568">' + (s.whatsapp_label || 'WhatsApp') + '</div><input id="hbq-whatsapp" class="hbq-input" type="tel" placeholder="' + (s.whatsapp_placeholder || '+54...') + '" style="' + inputStyle + '" />';
+    if (s.name_capture) fields += '<div style="margin-bottom:4px;text-align:left;font-size:0.9em;font-weight:600;color:#4a5568">' + (s.name_label || 'Nombre') + ' *</div><input id="hbq-name" class="hbq-input" type="text" required placeholder="' + (s.name_placeholder || 'Tu nombre') + '" style="' + inputStyle + '" />';
+    if (s.email_capture) fields += '<div style="margin-bottom:4px;text-align:left;font-size:0.9em;font-weight:600;color:#4a5568">' + (s.email_label || 'E-mail') + ' *</div><input id="hbq-email" class="hbq-input" type="email" required placeholder="' + (s.email_placeholder || 'tu@email.com') + '" style="' + inputStyle + '" />';
+    if (s.whatsapp_capture) fields += '<div style="margin-bottom:4px;text-align:left;font-size:0.9em;font-weight:600;color:#4a5568">' + (s.whatsapp_label || 'WhatsApp') + ' *</div><input id="hbq-whatsapp" class="hbq-input hbq-tel" type="tel" required placeholder="' + (s.whatsapp_placeholder || '(99) 99999-9999') + '" style="' + inputStyle + '" />';
 
     render(
       '<div style="padding:32px;text-align:center;background:#fff;border-radius:12px;box-shadow:none;border:none">' +
       '<h3 style="margin-bottom:24px;font-size:1.4em;font-weight:700;color:#1a202c">' + (s.lead_headline || 'Antes de começar...') + '</h3>' +
       fields +
+      '<div id="hbq-lead-error" style="color:#ef4444;font-size:0.85em;margin-bottom:12px;display:none"></div>' +
       '<button id="hbq-lead-next" style="background:#426a35;color:#fff;border:none;padding:16px;border-radius:12px;font-size:1.1em;font-weight:700;cursor:pointer;width:100%;margin-top:8px;box-shadow:0 4px 12px rgba(66,106,53,0.3)">Continuar</button>' +
       '</div>'
     );
@@ -108,6 +109,12 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     container.querySelectorAll('.hbq-input').forEach(function(inp) {
       inp.onfocus = function() { this.style.borderColor = '#426a35'; };
       inp.onblur = function() { this.style.borderColor = '#e2e8f0'; };
+      if (inp.classList.contains('hbq-tel')) {
+        inp.oninput = function(e) {
+          var x = e.target.value.replace(/\D/g, '').match(/(\d{0,2})(\d{0,5})(\d{0,4})/);
+          e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
+        };
+      }
     });
 
     var nextBtn = document.getElementById('hbq-lead-next');
@@ -116,9 +123,27 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
         var nameEl = document.getElementById('hbq-name');
         var emailEl = document.getElementById('hbq-email');
         var waEl = document.getElementById('hbq-whatsapp');
-        state.leadName = nameEl ? nameEl.value : '';
-        state.leadEmail = emailEl ? emailEl.value : '';
-        state.whatsapp = waEl ? waEl.value : '';
+        var errorEl = document.getElementById('hbq-lead-error');
+        
+        var name = nameEl ? nameEl.value : '';
+        var email = emailEl ? emailEl.value : '';
+        var wa = waEl ? waEl.value : '';
+
+        if ((nameEl && !name) || (emailEl && !email) || (waEl && !wa)) {
+          errorEl.textContent = 'Por favor, preencha todos os campos obrigatórios.';
+          errorEl.style.display = 'block';
+          return;
+        }
+
+        if (emailEl && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          errorEl.textContent = 'Por favor, insira um e-mail válido.';
+          errorEl.style.display = 'block';
+          return;
+        }
+
+        state.leadName = name;
+        state.leadEmail = email;
+        state.whatsapp = wa;
         state.currentQuestion = 0;
         renderQuestion();
       };
@@ -132,7 +157,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
     var mediaHtml = '';
     if (q.image_url && q.media_position === 'top') {
-      mediaHtml = '<img src="' + q.image_url + '" style="width:100%;max-width:708px;height:320px;object-fit:cover;border-radius:12px;margin-bottom:20px;display:block" />';
+      mediaHtml = '<img src="' + q.image_url + '" style="width:100%;max-width:708px;height:auto;max-height:400px;object-fit:cover;border-radius:12px;margin-bottom:20px;display:block" />';
     }
 
     var optionsHtml = (q.options || []).map(function(opt, i) {
@@ -143,7 +168,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     }).join('');
 
     if (q.image_url && q.media_position === 'bottom') {
-      mediaHtml = '<img src="' + q.image_url + '" style="width:100%;max-width:708px;height:320px;object-fit:cover;border-radius:12px;margin-top:20px;display:block" />';
+      mediaHtml = '<img src="' + q.image_url + '" style="width:100%;max-width:708px;height:auto;max-height:400px;object-fit:cover;border-radius:12px;margin-top:20px;display:block" />';
     }
 
     // Progress bar no topo, fora do container de conteúdo principal
@@ -261,108 +286,90 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       return;
     }
 
-    var copyBands = {
-      es: {
-        leve: { headline: 'Tu cuerpo presenta señales de inflamación leve a moderada', description: 'Este es el momento ideal para actuar y prevenir el avance.' },
-        moderada: { headline: 'Tu cuerpo presenta inflamación moderada', description: 'Los síntomas ya afectan tu calidad de vida.' },
-        moderada_avancada: { headline: 'Tu cuerpo presenta señales de inflamación moderada a avanzada', description: 'Es crucial actuar ahora para evitar daños irreversibles.' },
-        avancada: { headline: 'Tu cuerpo presenta señales de inflamación avanzada a crítica', description: 'Atención urgente: tu cuerpo necesita un protocolo específico ahora.' }
-      },
-      pt: {
-        leve: { headline: 'Seu corpo apresenta sinais de inflamação leve a moderada', description: 'Este é o momento ideal para agir e prevenir o avanço.' },
-        moderada: { headline: 'Seu corpo apresenta inflamação moderada', description: 'Os sintomas já afetam sua qualidade de vida.' },
-        moderada_avancada: { headline: 'Seu corpo apresenta sinais de inflamação moderada a avançada', description: 'É crucial agir agora para evitar danos irreversíveis.' },
-        avancada: { headline: 'Seu corpo apresenta sinais de inflamação avançada a crítica', description: 'Atenção urgente: seu corpo precisa de um protocolo específico agora.' }
-      }
-    };
-    var copy = (copyBands[lang] || copyBands.es)[band] || copyBands.es.leve;
-
-    var symptomsMap = {
-      es: {
-        leve: ['❌ Tu cuerpo está acumulando inflamación silenciosa', '❌ Edemas esporádicos en piernas y brazos', '❌ Fatiga y pesadez frecuente'],
-        moderada: ['❌ Tu cuerpo está acumulando inflamación', '❌ Esto aumenta el edema y la sensación de pesadez', '❌ La grasa no responde a la dieta común'],
-        moderada_avancada: ['❌ Tu cuerpo está acumulando inflamación', '❌ La grasa no responde a la dieta común', '❌ Los síntomas tienden a empeorar con el tiempo'],
-        avancada: ['❌ Inflamación sistémica avanzada', '❌ Dificultad para caminar y moverse', '❌ Dolores intensos al tacto', '❌ Los síntomas empeoran sin tratamiento específico']
-      },
-      pt: {
-        leve: ['❌ Seu corpo está acumulando inflamação silenciosa', '❌ Edemas esporádicos nas pernas e braços', '❌ Fadiga e sensação de peso frequente'],
-        moderada: ['❌ Seu corpo está acumulando inflamação', '❌ Isso aumenta o inchaço e a sensação de peso', '❌ A gordura não responde à dieta comum'],
-        moderada_avancada: ['❌ Seu corpo está acumulando inflamação', '❌ A gordura não responde à dieta comum', '❌ Os sintomas tendem a piorar com o tempo'],
-        avancada: ['❌ Inflamação sistêmica avançada', '❌ Dificuldade de locomoção', '❌ Dores intensas ao toque', '❌ Os sintomas pioram sem tratamento específico']
-      }
-    };
-    var symptoms = (symptomsMap[lang] || symptomsMap.es)[band] || symptomsMap.es.moderada;
+    var symptoms = Array.isArray(result.description) ? result.description : (result.description ? [result.description] : []);
 
     var scorePercent = Math.min(95, Math.max(10, (state.score / 20) * 100));
     var compItems = [
-      { today: rp.comp_item_1_today || (lang==='pt'?'Dores constantes':'Dolores constantes'), after: rp.comp_item_1_after || (lang==='pt'?'Alívio total da dor':'Alivio total del dolor'), todayVal: Math.min(scorePercent+10,90) },
-      { today: rp.comp_item_2_today || (lang==='pt'?'Inchaço e peso':'Hinchazón y pesadez'), after: rp.comp_item_2_after || (lang==='pt'?'Pernas leves':'Piernas ligeras'), todayVal: Math.min(scorePercent+20,95) },
-      { today: rp.comp_item_3_today || (lang==='pt'?'Celulite aparente':'Celulitis aparente'), after: rp.comp_item_3_after || (lang==='pt'?'Pele mais lisa':'Piel más lisa'), todayVal: Math.min(scorePercent+5,85) },
-      { today: rp.comp_item_4_today || (lang==='pt'?'Falta de energia':'Falta de energía'), after: rp.comp_item_4_after || (lang==='pt'?'Mais disposição':'Más disposición'), todayVal: Math.min(scorePercent+15,80) }
-    ];
+      { today: rp.comp_item_1_today, after: rp.comp_item_1_after, todayVal: Math.min(scorePercent+10,90) },
+      { today: rp.comp_item_2_today, after: rp.comp_item_2_after, todayVal: Math.min(scorePercent+20,95) },
+      { today: rp.comp_item_3_today, after: rp.comp_item_3_after, todayVal: Math.min(scorePercent+5,85) },
+      { today: rp.comp_item_4_today, after: rp.comp_item_4_after, todayVal: Math.min(scorePercent+15,80) }
+    ].filter(function(item) { return item.today || item.after; });
 
     var ctaUrl = result.offer_url || s.cta_offer_url || '#';
     var html = '<div style="font-family:system-ui,sans-serif;max-width:708px;margin:0 auto;background:#fff;border-radius:12px;padding:24px;box-shadow:none;border:none">';
 
-    // 1. Imagem da faixa (vem do Step3 Bands — result.image_url)
+    // 1. Imagem da faixa
     if (result.image_url) {
-      html += '<img src="' + result.image_url + '" loading="lazy" style="width:100%;max-width:708px;height:320px;object-fit:cover;border-radius:12px;display:block;margin:0 auto 24px;box-shadow:0 10px 25px rgba(0,0,0,0.1)" />';
+      html += '<img src="' + result.image_url + '" loading="lazy" style="width:100%;max-width:708px;height:auto;max-height:400px;object-fit:cover;border-radius:12px;display:block;margin:0 auto 24px;box-shadow:0 10px 25px rgba(0,0,0,0.1)" />';
     }
 
     // 2. Badge de resultado
-    html += '<div style="background:#fff8f0;border:1px solid #fde68a;border-left:4px solid #f97316;border-radius:12px;padding:16px 18px;margin-bottom:20px">';
-    html += '<p style="font-size:12px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 6px">' + (rp.result_badge_label || '⚠️ TU RESULTADO basado en tus respuestas:') + '</p>';
-    html += '<div style="display:inline-block;background:' + bandColor + ';color:' + badgeTextColor + ';padding:10px 28px;border-radius:30px;font-size:16px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:8px">' + (result.label || band) + '</div>';
-    html += '</div>';
+    if (result.label || rp.result_badge_label) {
+      html += '<div style="background:#fff8f0;border:1px solid #fde68a;border-left:4px solid #f97316;border-radius:12px;padding:16px 18px;margin-bottom:20px">';
+      if (rp.result_badge_label) html += '<p style="font-size:12px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 6px">' + rp.result_badge_label + '</p>';
+      if (result.label || band) html += '<div style="display:inline-block;background:' + bandColor + ';color:' + badgeTextColor + ';padding:10px 28px;border-radius:30px;font-size:16px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:8px">' + (result.label || band) + '</div>';
+      html += '</div>';
+    }
 
     // 3. Journey Chart SVG
-    html += '<div style="margin-bottom:28px"><div style="text-align:center;margin-bottom:14px">';
-    html += '<h3 style="font-size:19px;font-weight:800;color:#1e293b;margin:0 0 6px">' + (rp.journey_title || (lang==='pt'?'Sua Jornada nos Próximos 30 Dias':'Tu Jornada en los Próximos 30 Días')) + '</h3>';
-    html += '<p style="font-size:13px;color:#64748b;margin:0">' + (rp.journey_subtitle || '') + '</p></div>';
-    html += '<div style="position:relative"><span style="position:absolute;top:8px;right:4px;background:#22c55e;color:#fff;font-size:11px;font-weight:800;padding:4px 10px;border-radius:20px;z-index:1">' + (rp.journey_days_badge || '30 DÍAS') + '</span>';
-    html += '<svg viewBox="0 0 400 200" style="width:100%;height:auto;display:block" xmlns="http://www.w3.org/2000/svg">';
-    html += '<defs><linearGradient id="hbqGrad' + QUIZ_ID + '" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#ef4444"/><stop offset="40%" style="stop-color:#f97316"/><stop offset="70%" style="stop-color:#eab308"/><stop offset="100%" style="stop-color:#22c55e"/></linearGradient></defs>';
-    html += '<line x1="45" y1="20" x2="390" y2="20" stroke="#f1f5f9" stroke-width="1"/><line x1="45" y1="57" x2="390" y2="57" stroke="#f1f5f9" stroke-width="1"/><line x1="45" y1="94" x2="390" y2="94" stroke="#f1f5f9" stroke-width="1"/><line x1="45" y1="131" x2="390" y2="131" stroke="#f1f5f9" stroke-width="1"/><line x1="45" y1="168" x2="390" y2="168" stroke="#e2e8f0" stroke-width="1"/>';
-    html += '<text x="38" y="172" text-anchor="end" font-size="10" fill="#94a3b8">0</text><text x="38" y="135" text-anchor="end" font-size="10" fill="#94a3b8">25</text><text x="38" y="98" text-anchor="end" font-size="10" fill="#94a3b8">50</text><text x="38" y="61" text-anchor="end" font-size="10" fill="#94a3b8">75</text><text x="38" y="24" text-anchor="end" font-size="10" fill="#94a3b8">100</text>';
-    html += '<polygon points="48,168 390,168 390,20" fill="url(#hbqGrad' + QUIZ_ID + ')" opacity="0.88"/>';
-    html += '<circle cx="48" cy="168" r="7" fill="#ef4444" stroke="#fff" stroke-width="2.5"/><circle cx="390" cy="20" r="7" fill="#22c55e" stroke="#fff" stroke-width="2.5"/>';
-    html += '<text x="62" y="185" font-size="10" font-weight="700" fill="#ef4444">' + (rp.journey_label_today || 'HOY') + '</text>';
-    html += '<text x="388" y="14" font-size="10" font-weight="700" fill="#22c55e" text-anchor="end">' + (rp.journey_label_future || 'EN 30 DÍAS') + '</text>';
-    html += '</svg></div></div>';
+    if (rp.journey_title || rp.journey_days_badge) {
+      html += '<div style="margin-bottom:28px"><div style="text-align:center;margin-bottom:14px">';
+      if (rp.journey_title) html += '<h3 style="font-size:19px;font-weight:800;color:#1e293b;margin:0 0 6px">' + rp.journey_title + '</h3>';
+      if (rp.journey_subtitle) html += '<p style="font-size:13px;color:#64748b;margin:0">' + rp.journey_subtitle + '</p>';
+      html += '</div><div style="position:relative">';
+      if (rp.journey_days_badge) html += '<span style="position:absolute;top:8px;right:4px;background:#22c55e;color:#fff;font-size:11px;font-weight:800;padding:4px 10px;border-radius:20px;z-index:1">' + rp.journey_days_badge + '</span>';
+      html += '<svg viewBox="0 0 400 200" style="width:100%;height:auto;display:block" xmlns="http://www.w3.org/2000/svg">';
+      html += '<defs><linearGradient id="hbqGrad' + QUIZ_ID + '" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#ef4444"/><stop offset="40%" style="stop-color:#f97316"/><stop offset="70%" style="stop-color:#eab308"/><stop offset="100%" style="stop-color:#22c55e"/></linearGradient></defs>';
+      html += '<line x1="45" y1="20" x2="390" y2="20" stroke="#f1f5f9" stroke-width="1"/><line x1="45" y1="57" x2="390" y2="57" stroke="#f1f5f9" stroke-width="1"/><line x1="45" y1="94" x2="390" y2="94" stroke="#f1f5f9" stroke-width="1"/><line x1="45" y1="131" x2="390" y2="131" stroke="#f1f5f9" stroke-width="1"/><line x1="45" y1="168" x2="390" y2="168" stroke="#e2e8f0" stroke-width="1"/>';
+      html += '<text x="38" y="172" text-anchor="end" font-size="10" fill="#94a3b8">0</text><text x="38" y="135" text-anchor="end" font-size="10" fill="#94a3b8">25</text><text x="38" y="98" text-anchor="end" font-size="10" fill="#94a3b8">50</text><text x="38" y="61" text-anchor="end" font-size="10" fill="#94a3b8">75</text><text x="38" y="24" text-anchor="end" font-size="10" fill="#94a3b8">100</text>';
+      html += '<polygon points="48,168 390,168 390,20" fill="url(#hbqGrad' + QUIZ_ID + ')" opacity="0.88"/>';
+      html += '<circle cx="48" cy="168" r="7" fill="#ef4444" stroke="#fff" stroke-width="2.5"/><circle cx="390" cy="20" r="7" fill="#22c55e" stroke="#fff" stroke-width="2.5"/>';
+      if (rp.journey_label_today) html += '<text x="62" y="185" font-size="10" font-weight="700" fill="#ef4444">' + rp.journey_label_today + '</text>';
+      if (rp.journey_label_future) html += '<text x="388" y="14" font-size="10" font-weight="700" fill="#22c55e" text-anchor="end">' + rp.journey_label_future + '</text>';
+      html += '</svg></div></div>';
+    }
 
     // 4. Comparativo com barras de progresso
-    html += '<div style="background:#fff;border:1px solid #e8e8e8;border-radius:16px;padding:20px;margin-bottom:24px"><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">';
-    html += '<div style="background:#fff;border-radius:12px;padding:14px;border:1px solid #e2e8f0"><div style="text-align:center;margin-bottom:12px"><span style="font-size:28px;display:block;margin-bottom:6px">' + (rp.comp_today_icon||'⏰') + '</span><span style="font-size:12px;font-weight:800;color:#475569;text-transform:uppercase">' + (rp.comp_today_title||(lang==='pt'?'Onde você está hoje':'Donde estás hoy')) + '</span></div>';
-    compItems.forEach(function(item) { html += '<div style="margin-bottom:10px"><div style="font-size:11px;font-weight:700;color:#1e293b;margin-bottom:3px;display:flex;justify-content:space-between"><span>' + item.today + '</span><span style="color:#94a3b8">' + Math.round(item.todayVal) + '%</span></div><div style="height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden"><div style="height:100%;width:' + item.todayVal + '%;background:#ef4444;border-radius:4px"></div></div></div>'; });
-    html += '</div>';
-    html += '<div style="background:#fff;border-radius:12px;padding:14px;border:1px solid #e2e8f0"><div style="text-align:center;margin-bottom:12px"><span style="font-size:28px;display:block;margin-bottom:6px">' + (rp.comp_after_icon||'✨') + '</span><span style="font-size:12px;font-weight:800;color:#475569;text-transform:uppercase">' + (rp.comp_after_title||(lang==='pt'?'Em 30 dias':'En 30 Días')) + '</span></div>';
-    compItems.forEach(function(item) { html += '<div style="margin-bottom:10px"><div style="font-size:11px;font-weight:700;color:#1e293b;margin-bottom:3px;display:flex;justify-content:space-between"><span>' + item.after + '</span><span style="color:#94a3b8">100%</span></div><div style="height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden"><div style="height:100%;width:100%;background:linear-gradient(90deg,#22c55e,#5a9e42);border-radius:4px"></div></div></div>'; });
-    html += '</div></div></div>';
+    if (compItems.length > 0 && (rp.comp_today_title || rp.comp_after_title)) {
+      html += '<div style="background:#fff;border:1px solid #e8e8e8;border-radius:16px;padding:20px;margin-bottom:24px"><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">';
+      html += '<div style="background:#fff;border-radius:12px;padding:14px;border:1px solid #e2e8f0"><div style="text-align:center;margin-bottom:12px"><span style="font-size:28px;display:block;margin-bottom:6px">' + (rp.comp_today_icon||'⏰') + '</span><span style="font-size:12px;font-weight:800;color:#475569;text-transform:uppercase">' + (rp.comp_today_title||'') + '</span></div>';
+      compItems.forEach(function(item) { if(item.today) html += '<div style="margin-bottom:10px"><div style="font-size:11px;font-weight:700;color:#1e293b;margin-bottom:3px;display:flex;justify-content:space-between"><span>' + item.today + '</span><span style="color:#94a3b8">' + Math.round(item.todayVal) + '%</span></div><div style="height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden"><div style="height:100%;width:' + item.todayVal + '%;background:#ef4444;border-radius:4px"></div></div></div>'; });
+      html += '</div>';
+      html += '<div style="background:#fff;border-radius:12px;padding:14px;border:1px solid #e2e8f0"><div style="text-align:center;margin-bottom:12px"><span style="font-size:28px;display:block;margin-bottom:6px">' + (rp.comp_after_icon||'✨') + '</span><span style="font-size:12px;font-weight:800;color:#475569;text-transform:uppercase">' + (rp.comp_after_title||'') + '</span></div>';
+      compItems.forEach(function(item) { if(item.after) html += '<div style="margin-bottom:10px"><div style="font-size:11px;font-weight:700;color:#1e293b;margin-bottom:3px;display:flex;justify-content:space-between"><span>' + item.after + '</span><span style="color:#94a3b8">100%</span></div><div style="height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden"><div style="height:100%;width:100%;background:linear-gradient(90deg,#22c55e,#5a9e42);border-radius:4px"></div></div></div>'; });
+      html += '</div></div></div>';
+    }
 
     // 5. Diagnóstico + sintomas
-    html += '<div style="background:#f0fdf4;border:1px solid #dcfce7;border-radius:14px;padding:20px;margin-bottom:20px">';
-    html += '<p style="font-size:16px;font-weight:700;color:#166534;margin:0 0 12px">' + (rp.diagnosis_heading || copy.headline) + '</p>';
-    html += '<ul style="list-style:none;padding:0;margin:0">';
-    symptoms.forEach(function(sym) { html += '<li style="padding:10px 14px;font-size:14px;color:#065f46;background:rgba(16,185,129,0.05);border-radius:8px;margin-bottom:6px;font-weight:500;border-left:3px solid #10b981">' + sym + '</li>'; });
-    html += '</ul></div>';
+    if (rp.diagnosis_heading || symptoms.length > 0) {
+      html += '<div style="background:#f0fdf4;border:1px solid #dcfce7;border-radius:14px;padding:20px;margin-bottom:20px">';
+      if (rp.diagnosis_heading) html += '<p style="font-size:16px;font-weight:700;color:#166534;margin:0 0 12px">' + rp.diagnosis_heading + '</p>';
+      if (symptoms.length > 0) {
+        html += '<ul style="list-style:none;padding:0;margin:0">';
+        symptoms.forEach(function(sym) { html += '<li style="padding:10px 14px;font-size:14px;color:#065f46;background:rgba(16,185,129,0.05);border-radius:8px;margin-bottom:6px;font-weight:500;border-left:3px solid #10b981">' + sym + '</li>'; });
+        html += '</ul>';
+      }
+      html += '</div>';
+    }
 
     // 6. Boa notícia
     if (rp.goodnews_text) { html += '<div style="background:linear-gradient(135deg,#f0f7ed,#e8f5e3);border:1px solid #c5e1b5;border-radius:14px;padding:18px 20px;margin-bottom:20px"><p style="font-size:15px;color:#2d5a1e;line-height:1.5;margin:0">' + rp.goodnews_text + '</p></div>'; }
 
     // 7. O que seu corpo precisa
-    if (rp.needs_title) {
+    if (rp.needs_title || rp.needs_desc || rp.needs_cta) {
       html += '<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:14px;padding:20px;margin-bottom:20px">';
-      html += '<h3 style="font-size:16px;font-weight:800;color:#14532d;margin:0 0 10px">' + rp.needs_title + '</h3>';
+      if (rp.needs_title) html += '<h3 style="font-size:16px;font-weight:800;color:#14532d;margin:0 0 10px">' + rp.needs_title + '</h3>';
       if (rp.needs_desc) html += '<p style="font-size:15px;color:#166534;margin:0 0 6px;line-height:1.5">' + rp.needs_desc + '</p>';
       if (rp.needs_cta) html += '<p style="font-size:16px;font-weight:700;color:#15803d;margin:0">' + rp.needs_cta + '</p>';
       html += '</div>';
     }
 
     // 8. Solução
-    if (rp.solution_title) {
+    if (rp.solution_title || rp.solution_desc) {
       html += '<div style="background:linear-gradient(135deg,#f0f6ee,#e8f0e5);border:1px solid #c5ddb8;border-radius:16px;padding:28px 24px;margin-bottom:24px;position:relative;overflow:hidden">';
       if (rp.solution_badge) html += '<div style="display:inline-block;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;font-size:12px;font-weight:800;padding:6px 14px;border-radius:20px;margin-bottom:14px;text-transform:uppercase">' + rp.solution_badge + '</div>';
-      html += '<h3 style="font-size:22px;font-weight:800;margin:0 0 12px;color:#333">' + rp.solution_title + '</h3>';
+      if (rp.solution_title) html += '<h3 style="font-size:22px;font-weight:800;margin:0 0 12px;color:#333">' + rp.solution_title + '</h3>';
       if (rp.solution_desc) html += '<div style="font-size:15px;color:#555;line-height:1.6;margin-bottom:16px">' + rp.solution_desc + '</div>';
       var solItems = Array.isArray(rp.solution_items) ? rp.solution_items.filter(Boolean) : [];
       if (solItems.length) { html += '<ul style="list-style:none;padding:0;margin:16px 0">'; solItems.forEach(function(item) { html += '<li style="margin-bottom:10px;font-size:15px;padding:10px 14px;background:rgba(66,106,53,0.08);border-radius:8px;font-weight:500;color:#333">' + item + '</li>'; }); html += '</ul>'; }
@@ -380,12 +387,15 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
     // 10. Entregáveis
     var deliverables = Array.isArray(rp.deliverables) ? rp.deliverables.filter(Boolean) : [];
-    if (deliverables.length) {
+    if (deliverables.length || rp.deliverables_title) {
       html += '<div style="background:linear-gradient(135deg,#f0f6ee,#e8f0e5);border:1px solid #c5ddb8;border-radius:16px;padding:20px;margin-bottom:20px">';
       if (rp.deliverables_title) html += '<h3 style="font-size:16px;font-weight:800;color:#14532d;margin:0 0 14px">' + rp.deliverables_title + '</h3>';
-      html += '<ul style="list-style:none;padding:0;margin:0">';
-      deliverables.forEach(function(d) { html += '<li style="padding:10px 0;font-size:15px;color:#166534;font-weight:600;border-bottom:1px solid rgba(66,106,53,0.15)">✔ ' + d + '</li>'; });
-      html += '</ul></div>';
+      if (deliverables.length) {
+        html += '<ul style="list-style:none;padding:0;margin:0">';
+        deliverables.forEach(function(d) { html += '<li style="padding:10px 0;font-size:15px;color:#166534;font-weight:600;border-bottom:1px solid rgba(66,106,53,0.15)">✔ ' + d + '</li>'; });
+        html += '</ul>';
+      }
+      html += '</div>';
     }
 
     // 11. Benefício imediato
@@ -396,22 +406,24 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     }
 
     // 12. Pricing card
-    html += '<div style="background:#fff;border:1px solid #e0e0e0;border-radius:16px;overflow:hidden;margin-bottom:24px">';
-    var pricingFeatures = Array.isArray(rp.pricing_features) ? rp.pricing_features.filter(Boolean) : [];
-    html += '<div style="display:flex">';
-    if (pricingFeatures.length) { html += '<div style="flex:1;background:#f0f6ee;padding:20px"><ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px">'; pricingFeatures.forEach(function(f) { html += '<li style="font-size:13px;color:#166534;font-weight:600">✔ ' + f + '</li>'; }); html += '</ul></div>'; }
-    html += '<div style="flex:1;padding:20px;text-align:center">';
-    if (rp.offer_label) html += '<p style="font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 8px">' + rp.offer_label + '</p>';
-    if (rp.price_from) html += '<p style="font-size:14px;color:#94a3b8;margin:0 0 4px">DE <span style="text-decoration:line-through">' + rp.price_from + '</span></p>';
-    if (rp.offer_sublabel) html += '<p style="font-size:14px;color:#475569;font-weight:600;margin:0 0 4px">' + rp.offer_sublabel + '</p>';
-    html += '<div style="display:flex;align-items:flex-end;justify-content:center;gap:4px;margin-bottom:16px;line-height:1"><span style="font-size:56px;font-weight:900;color:#1e293b;line-height:1">' + (rp.price_to||'9') + '</span><span style="font-size:18px;font-weight:700;color:#64748b;margin-bottom:8px">' + (rp.price_currency||'USD') + '</span></div>';
-    html += '</div></div>';
-    html += '<div style="padding:20px;text-align:center">';
-    html += '<a href="' + ctaUrl + '" target="_blank" style="display:block;background:#426A35;color:#fff;padding:20px;border-radius:12px;font-weight:800;font-size:18px;text-decoration:none;box-shadow:0 6px 20px rgba(66,106,53,0.3);margin-bottom:12px">' + (rp.cta_text||(lang==='pt'?'QUERO COMEÇAR AGORA →':'QUIERO EMPEZAR AHORA →')) + '</a>';
-    if (rp.guarantee_text) html += '<p style="font-size:13px;color:#64748b;margin:0 0 4px">' + rp.guarantee_text + '</p>';
-    if (rp.offer_footer_1) html += '<p style="font-size:12px;color:#888;margin:0 0 2px">' + rp.offer_footer_1 + '</p>';
-    if (rp.offer_footer_2) html += '<p style="font-size:12px;color:#888;margin:0">' + rp.offer_footer_2 + '</p>';
-    html += '</div></div>';
+    if (rp.price_to || rp.cta_text) {
+      html += '<div style="background:#fff;border:1px solid #e0e0e0;border-radius:16px;overflow:hidden;margin-bottom:24px">';
+      var pricingFeatures = Array.isArray(rp.pricing_features) ? rp.pricing_features.filter(Boolean) : [];
+      html += '<div style="display:flex">';
+      if (pricingFeatures.length) { html += '<div style="flex:1;background:#f0f6ee;padding:20px"><ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px">'; pricingFeatures.forEach(function(f) { html += '<li style="font-size:13px;color:#166534;font-weight:600">✔ ' + f + '</li>'; }); html += '</ul></div>'; }
+      html += '<div style="flex:1;padding:20px;text-align:center">';
+      if (rp.offer_label) html += '<p style="font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 8px">' + rp.offer_label + '</p>';
+      if (rp.price_from) html += '<p style="font-size:14px;color:#94a3b8;margin:0 0 4px">DE <span style="text-decoration:line-through">' + rp.price_from + '</span></p>';
+      if (rp.offer_sublabel) html += '<p style="font-size:14px;color:#475569;font-weight:600;margin:0 0 4px">' + rp.offer_sublabel + '</p>';
+      if (rp.price_to) html += '<div style="display:flex;align-items:flex-end;justify-content:center;gap:4px;margin-bottom:16px;line-height:1"><span style="font-size:56px;font-weight:900;color:#1e293b;line-height:1">' + rp.price_to + '</span><span style="font-size:18px;font-weight:700;color:#64748b;margin-bottom:8px">' + (rp.price_currency||'') + '</span></div>';
+      html += '</div></div>';
+      html += '<div style="padding:20px;text-align:center">';
+      if (rp.cta_text) html += '<a href="' + ctaUrl + '" target="_blank" style="display:block;background:#426A35;color:#fff;padding:20px;border-radius:12px;font-weight:800;font-size:18px;text-decoration:none;box-shadow:0 6px 20px rgba(66,106,53,0.3);margin-bottom:12px">' + rp.cta_text + '</a>';
+      if (rp.guarantee_text) html += '<p style="font-size:13px;color:#64748b;margin:0 0 4px">' + rp.guarantee_text + '</p>';
+      if (rp.offer_footer_1) html += '<p style="font-size:12px;color:#888;margin:0 0 2px">' + rp.offer_footer_1 + '</p>';
+      if (rp.offer_footer_2) html += '<p style="font-size:12px;color:#888;margin:0">' + rp.offer_footer_2 + '</p>';
+      html += '</div></div>';
+    }
 
     // 13. Prova social
     if (rp.show_social_proof && rp.gallery_ids) {
@@ -438,7 +450,11 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     state.quiz = QUIZ_DATA;
     var s = state.quiz.settings || {};
     state.totalQuestions = (state.quiz.questions || []).length;
-    if (s.show_landing) {
+    
+    // Se show_landing não estiver definido (quiz antigo), assume true se houver headline ou imagem
+    var shouldShowLanding = s.show_landing === true || (s.show_landing === undefined && (s.headline || s.landing_image));
+    
+    if (shouldShowLanding) {
       renderLanding();
     } else if (s.name_capture || s.email_capture || s.whatsapp_capture) {
       renderLead();
