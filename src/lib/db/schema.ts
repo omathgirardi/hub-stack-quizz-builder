@@ -4,6 +4,7 @@ export const quizzes = pgTable('quizzes', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: text('user_id').notNull(),
   title: text('title').notNull(),
+  slug: text('slug').unique(),
   questions: jsonb('questions').notNull().default([]),
   settings: jsonb('settings').notNull().default({}),
   status: text('status').notNull().default('active'),
@@ -11,6 +12,7 @@ export const quizzes = pgTable('quizzes', {
   updatedAt: timestamp('updated_at').defaultNow(),
 }, (t) => ({
   userIdIdx: index('idx_quizzes_user_id').on(t.userId),
+  slugIdx: index('idx_quizzes_slug').on(t.slug),
 }))
 
 export const responses = pgTable('responses', {

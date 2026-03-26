@@ -7,6 +7,8 @@ import type { QuizSettings } from '@/lib/sanitize'
 interface Props {
   settings: QuizSettings
   onChange: (s: QuizSettings) => void
+  slug?: string
+  onSlugChange?: (slug: string) => void
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
@@ -20,12 +22,39 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 const inp = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-label focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary'
 
-export function Step1General({ settings, onChange }: Props) {
+export function Step1General({ settings, onChange, slug = '', onSlugChange }: Props) {
   const set = (key: keyof QuizSettings) => (val: string) => onChange({ ...settings, [key]: val })
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
+
+  function handleSlugChange(value: string) {
+    const sanitized = value
+      .toLowerCase()
+      .replace(/[^a-z0-9-]/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-/, '')
+    onSlugChange?.(sanitized)
+  }
 
   return (
     <div className="space-y-6">
       <h2 className="text-base font-semibold text-gray-800">1. Configurações Gerais</h2>
+
+      <Field label="URL personalizada (slug)">
+        <div className="flex items-center gap-2">
+          <span className="shrink-0 text-sm text-gray-400">{appUrl}/q/</span>
+          <input
+            className={inp}
+            value={slug}
+            onChange={(e) => handleSlugChange(e.target.value)}
+            placeholder="meu-quiz"
+          />
+        </div>
+        {slug && (
+          <p className="mt-1 text-xs text-green-600">
+            Página hospedada: {appUrl}/q/{slug}
+          </p>
+        )}
+      </Field>
 
       <Field label="Exibir Capa (Landing Page)">
         <Toggle

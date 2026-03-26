@@ -48,7 +48,10 @@ export interface QuizSettings {
   name_capture?: boolean
   email_capture?: boolean
   lead_headline?: string
+  name_label?: string
+  email_label?: string
   whatsapp_label?: string
+  whatsapp_placeholder?: string
   whatsapp_msg?: string
   name_placeholder?: string
   email_placeholder?: string

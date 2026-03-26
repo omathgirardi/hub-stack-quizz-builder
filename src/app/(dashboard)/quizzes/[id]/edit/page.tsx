@@ -1,7 +1,7 @@
 import { auth } from '@clerk/nextjs/server'
 import { redirect, notFound } from 'next/navigation'
 import { getQuizById, updateQuiz } from '@/lib/db/queries/quizzes'
-import { BuilderLayout } from '@/components/builder/BuilderLayout'
+import { BuilderModeSwitch } from '@/components/builder/BuilderModeSwitch'
 
 
 export default async function EditQuizPage({ params }: { params: Promise<{ id: string }> }) {
@@ -12,25 +12,29 @@ export default async function EditQuizPage({ params }: { params: Promise<{ id: s
   const quiz = await getQuizById(id, userId)
   if (!quiz) notFound()
 
-  async function handleUpdate(title: string, questions: unknown[], settings: unknown) {
+  async function handleUpdate(title: string, questions: unknown[], settings: unknown, slug?: string) {
     'use server'
     const { userId } = await auth()
     if (!userId) throw new Error('Unauthorized')
     await updateQuiz(id, userId, {
       title,
+      slug: slug || null,
       questions: questions as never,
       settings: settings as never,
     })
   }
 
+  const quizData = {
+    id: quiz.id,
+    title: quiz.title,
+    slug: quiz.slug ?? undefined,
+    questions: (quiz.questions as unknown[]) ?? [],
+    settings: (quiz.settings as Record<string, unknown>) ?? {},
+  }
+
   return (
-    <BuilderLayout
-      quiz={{
-        id: quiz.id,
-        title: quiz.title,
-        questions: (quiz.questions as unknown[]) ?? [],
-        settings: (quiz.settings as Record<string, unknown>) ?? {},
-      }}
+    <BuilderModeSwitch
+      quiz={quizData}
       onSave={handleUpdate}
     />
   )

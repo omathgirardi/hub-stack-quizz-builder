@@ -52,6 +52,12 @@ export async function deleteQuiz(id: string, userId: string) {
   await db.delete(quizzes).where(and(eq(quizzes.id, id), eq(quizzes.userId, userId)))
 }
 
+export async function getQuizBySlug(slug: string) {
+  const db = getDb()
+  const result = await db.select().from(quizzes).where(eq(quizzes.slug, slug)).limit(1)
+  return result[0] ?? null
+}
+
 export async function getAllQuizzes() {
   const db = getDb()
   return db.select().from(quizzes).orderBy(desc(quizzes.createdAt))
